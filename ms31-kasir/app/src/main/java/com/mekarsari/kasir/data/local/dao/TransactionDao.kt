@@ -1,0 +1,40 @@
+package com.mekarsari.kasir.data.local.dao
+
+import androidx.room.*
+import com.mekarsari.kasir.data.local.entity.Transaction
+import com.mekarsari.kasir.data.local.entity.TransactionItem
+import kotlinx.coroutines.flow.Flow
+
+data class TransactionWithItems(
+    @Embedded val transaction: Transaction,
+    @Relation(
+        parentColumn = "id",
+        entityColumn = "transaction_id"
+    )
+    val items: List<TransactionItem>
+)
+
+@Dao
+interface TransactionDao {
+    @Insert
+    suspend fun insertTransactionOnly(transaction: Transaction): Long
+
+    @Insert
+    suspend fun insertTransactionItems(items: List<TransactionItem>)
+
+    @Transaction
+    suspend fun insertTransactionWithItems(transaction: Transaction, items: List<TransactionItem>): Long {
+        val transactionId = insertTransactionOnly(transaction).toInt()
+        val itemsWithId = items.map { it.copy(transactionId = transactionId) }
+        insertTransactionItems(itemsWithId)
+        return transactionId.toLong()
+    }
+
+    @Transaction
+    @Query("SELECT * FROM transactions ORDER BY created_at DESC")
+    fun getAllTransactionsWithItems(): Flow<List<TransactionWithItems>>
+
+    @Transaction
+    @Query("SELECT * FROM transactions WHERE id = :id")
+    suspend fun getTransactionWithItemsById(id: Int): TransactionWithItems?
+}
