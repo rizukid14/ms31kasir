@@ -1,22 +1,22 @@
-# Kasir Mekar Sari (Android Native POS App)
+# Kasir RM. Mekar Sari (Android Native POS App)
 
-Aplikasi kasir (Point of Sale) offline-first berbasis Android native yang dirancang khusus untuk pencatatan transaksi harian dan pencetakan struk belanja menggunakan printer thermal Bluetooth (ESC/POS).
+Aplikasi kasir (Point of Sale) offline-first berbasis Android native yang dirancang khusus untuk pencatatan transaksi harian dan pencetakan struk belanja menggunakan printer thermal Bluetooth (ESC/POS) di Rumah Makan RM. Mekar Sari.
 
 ---
 
 ## 🌟 Fitur Utama
 
-- **Offline-First (Room Database)**: Semua data produk, riwayat transaksi, dan pengaturan toko disimpan secara lokal di perangkat Anda. Tidak memerlukan koneksi internet untuk beroperasi.
+- **Offline-First (Room Database)**: Semua data produk, riwayat transaksi, dan pengaturan rumah makan disimpan secara lokal di perangkat Anda. Tidak memerlukan koneksi internet untuk beroperasi.
 - **Katalog Produk & Keranjang Belanja**: Tampilan katalog grid yang responsif dengan sidebar keranjang belanja.
-- **Kustomisasi Harga Transaksi**: Kasir dapat menyesuaikan harga barang langsung di keranjang untuk transaksi tertentu tanpa memengaruhi harga master produk.
+- **Kustomisasi Harga Transaksi**: Kasir dapat menyesuaikan harga makanan/minuman langsung di keranjang untuk transaksi tertentu tanpa memengaruhi harga master produk.
 - **Sistem Perpajakan (Pajak Adjustable)**: Nilai persentase pajak dapat disesuaikan di menu Settings dan otomatis dihitung saat checkout serta dicetak di struk.
 - **Pencetakan Struk Bluetooth (ESC/POS)**:
   - Integrasi printer thermal Bluetooth (ukuran kertas 58mm).
   - Pilihan **Bayar saja** (menyimpan transaksi) atau **Cetak Struk** (menyimpan dan langsung mencetak).
   - Fitur cetak ulang (*reprint*) struk langsung dari riwayat transaksi.
 - **Logo Struk Kustom & Default**:
-  - Pengguna dapat mengunggah gambar logo warung sendiri dari galeri HP di menu Settings.
-  - Jika belum mengunggah logo kustom, aplikasi otomatis mencetak logo stempel ritel default bertuliskan **"TOKO MEKAR SARI"** agar struk tetap estetik.
+  - Pengguna dapat mengunggah gambar logo rumah makan sendiri dari galeri HP di menu Settings.
+  - Jika belum mengunggah logo kustom, aplikasi otomatis mencetak logo stempel default bertuliskan **"RM. MEKAR SARI"** agar struk tetap estetik.
 - **Dashboard Laporan & Statistik Bulanan**:
   - Ringkasan performa penjualan bulanan (Total Omzet, Jumlah Transaksi, dan Rata-rata Pembelian/Ticket Size).
   - Grafik batang harian (*Daily Sales Bar Chart*) yang interaktif berbasis Jetpack Compose untuk memantau tren omzet harian.
