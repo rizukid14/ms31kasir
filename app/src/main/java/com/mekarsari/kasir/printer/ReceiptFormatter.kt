@@ -85,10 +85,13 @@ class ReceiptFormatter {
         for (item in items) {
             val portionRegex = """\(([0-9.]+)\s*Porsi\)""".toRegex()
             val match = portionRegex.find(item.namaProdukSnapshot)
-            val customPortion = match?.groupValues?.get(1)?.toDoubleOrNull()
+            val customPortion = item.porsiCustom ?: match?.groupValues?.get(1)?.toDoubleOrNull()
             
-            val cleanedName = if (customPortion != null) {
-                item.namaProdukSnapshot.replace(" ($customPortion Porsi)", "")
+            val cleanedName = if (item.porsiCustom != null) {
+                item.namaProdukSnapshot
+            } else if (customPortion != null) {
+                val fallbackPortionStr = match?.groupValues?.get(1)
+                item.namaProdukSnapshot.replace(" ($fallbackPortionStr Porsi)", "")
             } else {
                 item.namaProdukSnapshot
             }

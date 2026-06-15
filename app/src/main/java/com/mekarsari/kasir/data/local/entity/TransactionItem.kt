@@ -26,5 +26,6 @@ data class TransactionItem(
     @ColumnInfo(name = "nama_produk_snapshot") val namaProdukSnapshot: String,
     @ColumnInfo(name = "harga_saat_itu") val hargaSaatItu: Long,
     @ColumnInfo(name = "qty") val qty: Int,
-    @ColumnInfo(name = "subtotal") val subtotal: Long
+    @ColumnInfo(name = "subtotal") val subtotal: Long,
+    @ColumnInfo(name = "porsi_custom") val porsiCustom: Double? = null
 )
