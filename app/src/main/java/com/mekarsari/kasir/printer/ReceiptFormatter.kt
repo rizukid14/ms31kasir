@@ -126,7 +126,12 @@ class ReceiptFormatter {
             } else {
                 visualQtyStr
             }
-            sb.append("[L]  $qtyStr x ${formatRupiah(item.hargaSaatItu)}[R]${formatRupiah(item.subtotal)}\n")
+            val originalUnitPrice = if (customPortion != null && customPortion > 0.0) {
+                Math.round(item.hargaSaatItu.toDouble() / customPortion)
+            } else {
+                item.hargaSaatItu
+            }
+            sb.append("[L]  $qtyStr x ${formatRupiah(originalUnitPrice)}[R]${formatRupiah(item.subtotal)}\n")
         }
 
         val subtotal = items.sumOf { it.subtotal }

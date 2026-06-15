@@ -1271,12 +1271,13 @@ fun ReceiptPreview(
                             }
                             val visualQtyStr = if (visualQty % 1.0 == 0.0) visualQty.toInt().toString() else visualQty.toString()
 
+                            val unitPrice = if (item.customPortion != null) item.product.harga else item.customHarga
                             val qtyText = if (showUnitQty) {
                                 val isMinuman = item.product.kategori == "Minuman"
                                 val unit = if (isMinuman) "Gelas" else "Porsi"
-                                "  $visualQtyStr $unit x ${formatRupiah(item.customHarga)}"
+                                "  $visualQtyStr $unit x ${formatRupiah(unitPrice)}"
                             } else {
-                                "  $visualQtyStr x ${formatRupiah(item.customHarga)}"
+                                "  $visualQtyStr x ${formatRupiah(unitPrice)}"
                             }
                             Text(
                                 text = qtyText,

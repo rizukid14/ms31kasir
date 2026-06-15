@@ -574,9 +574,19 @@ fun RiwayatReceiptPreview(
                                                 cleanedName.contains("frestea", ignoreCase = true) ||
                                                 cleanedName.contains("air ", ignoreCase = true)
                                 val unit = if (isMinuman) "Gelas" else "Porsi"
-                                "  $visualQtyStr $unit x ${formatRupiah(item.hargaSaatItu)}"
+                                val originalUnitPrice = if (customPortion != null && customPortion > 0.0) {
+                                    Math.round(item.hargaSaatItu.toDouble() / customPortion)
+                                } else {
+                                    item.hargaSaatItu
+                                }
+                                "  $visualQtyStr $unit x ${formatRupiah(originalUnitPrice)}"
                             } else {
-                                "  $visualQtyStr x ${formatRupiah(item.hargaSaatItu)}"
+                                val originalUnitPrice = if (customPortion != null && customPortion > 0.0) {
+                                    Math.round(item.hargaSaatItu.toDouble() / customPortion)
+                                } else {
+                                    item.hargaSaatItu
+                                }
+                                "  $visualQtyStr x ${formatRupiah(originalUnitPrice)}"
                             }
                             Text(
                                 text = qtyText,
