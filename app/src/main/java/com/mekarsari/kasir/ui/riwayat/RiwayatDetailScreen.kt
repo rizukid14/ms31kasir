@@ -529,9 +529,19 @@ fun RiwayatReceiptPreview(
 
                 // Items List
                 items.forEach { item ->
+                    val portionRegex = """\(([0-9.]+)\s*Porsi\)""".toRegex()
+                    val match = portionRegex.find(item.namaProdukSnapshot)
+                    val customPortion = match?.groupValues?.get(1)?.toDoubleOrNull()
+                    
+                    val cleanedName = if (customPortion != null) {
+                        item.namaProdukSnapshot.replace(" ($customPortion Porsi)", "")
+                    } else {
+                        item.namaProdukSnapshot
+                    }
+
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Text(
-                            text = item.namaProdukSnapshot,
+                            text = cleanedName,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = Color.Black
@@ -540,23 +550,30 @@ fun RiwayatReceiptPreview(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            val qtyText = if (showUnitQty) {
-                                val isMinuman = item.namaProdukSnapshot.contains("es ", ignoreCase = true) ||
-                                                item.namaProdukSnapshot.contains("teh", ignoreCase = true) ||
-                                                item.namaProdukSnapshot.contains("jeruk", ignoreCase = true) ||
-                                                item.namaProdukSnapshot.contains("kopi", ignoreCase = true) ||
-                                                item.namaProdukSnapshot.contains("milo", ignoreCase = true) ||
-                                                item.namaProdukSnapshot.contains("susu", ignoreCase = true) ||
-                                                item.namaProdukSnapshot.contains("soda", ignoreCase = true) ||
-                                                item.namaProdukSnapshot.contains("cola", ignoreCase = true) ||
-                                                item.namaProdukSnapshot.contains("fanta", ignoreCase = true) ||
-                                                item.namaProdukSnapshot.contains("sprite", ignoreCase = true) ||
-                                                item.namaProdukSnapshot.contains("frestea", ignoreCase = true) ||
-                                                item.namaProdukSnapshot.contains("air ", ignoreCase = true)
-                                val unit = if (isMinuman) "Gelas" else "Porsi"
-                                "  ${item.qty} $unit x ${formatRupiah(item.hargaSaatItu)}"
+                            val visualQty = if (customPortion != null) {
+                                customPortion * item.qty
                             } else {
-                                "  ${item.qty} x ${formatRupiah(item.hargaSaatItu)}"
+                                item.qty.toDouble()
+                            }
+                            val visualQtyStr = if (visualQty % 1.0 == 0.0) visualQty.toInt().toString() else visualQty.toString()
+
+                            val qtyText = if (showUnitQty) {
+                                val isMinuman = cleanedName.contains("es ", ignoreCase = true) ||
+                                                cleanedName.contains("teh", ignoreCase = true) ||
+                                                cleanedName.contains("jeruk", ignoreCase = true) ||
+                                                cleanedName.contains("kopi", ignoreCase = true) ||
+                                                cleanedName.contains("milo", ignoreCase = true) ||
+                                                cleanedName.contains("susu", ignoreCase = true) ||
+                                                cleanedName.contains("soda", ignoreCase = true) ||
+                                                cleanedName.contains("cola", ignoreCase = true) ||
+                                                cleanedName.contains("fanta", ignoreCase = true) ||
+                                                cleanedName.contains("sprite", ignoreCase = true) ||
+                                                cleanedName.contains("frestea", ignoreCase = true) ||
+                                                cleanedName.contains("air ", ignoreCase = true)
+                                val unit = if (isMinuman) "Gelas" else "Porsi"
+                                "  $visualQtyStr $unit x ${formatRupiah(item.hargaSaatItu)}"
+                            } else {
+                                "  $visualQtyStr x ${formatRupiah(item.hargaSaatItu)}"
                             }
                             Text(
                                 text = qtyText,

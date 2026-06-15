@@ -455,8 +455,15 @@ fun CartItemRow(
                     }
                     .padding(horizontal = 8.dp)
             ) {
+                val displayQty = if (item.customPortion != null) {
+                    val totalPortion = item.customPortion * item.quantity
+                    // Format to remove trailing zeros if it's a whole number (e.g. 4.0 -> 4)
+                    if (totalPortion % 1.0 == 0.0) totalPortion.toInt().toString() else totalPortion.toString()
+                } else {
+                    item.quantity.toString()
+                }
                 Text(
-                    text = item.quantity.toString(),
+                    text = displayQty,
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.bodyMedium,
                     color = if (item.customPortion != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
@@ -1246,8 +1253,9 @@ fun ReceiptPreview(
                 // Items List
                 cartItems.forEach { item ->
                     Column(modifier = Modifier.fillMaxWidth()) {
+                        val displayName = if (item.isHalfPortion) "${item.product.nama} (1/2 Porsi)" else item.product.nama
                         Text(
-                            text = if (item.isHalfPortion) "${item.product.nama} (1/2 Porsi)" else item.product.nama,
+                            text = displayName,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = Color.Black
@@ -1256,12 +1264,19 @@ fun ReceiptPreview(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
+                            val visualQty = if (item.customPortion != null) {
+                                item.customPortion * item.quantity
+                            } else {
+                                item.quantity.toDouble()
+                            }
+                            val visualQtyStr = if (visualQty % 1.0 == 0.0) visualQty.toInt().toString() else visualQty.toString()
+
                             val qtyText = if (showUnitQty) {
                                 val isMinuman = item.product.kategori == "Minuman"
                                 val unit = if (isMinuman) "Gelas" else "Porsi"
-                                "  ${item.quantity} $unit x ${formatRupiah(item.customHarga)}"
+                                "  $visualQtyStr $unit x ${formatRupiah(item.customHarga)}"
                             } else {
-                                "  ${item.quantity} x ${formatRupiah(item.customHarga)}"
+                                "  $visualQtyStr x ${formatRupiah(item.customHarga)}"
                             }
                             Text(
                                 text = qtyText,

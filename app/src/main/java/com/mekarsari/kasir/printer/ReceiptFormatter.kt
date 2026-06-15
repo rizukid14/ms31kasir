@@ -83,29 +83,45 @@ class ReceiptFormatter {
         sb.append("[C]--------------------------------\n")
 
         for (item in items) {
-            val name = item.namaProdukSnapshot
-            sb.append("[L]$name\n")
+            val portionRegex = """\(([0-9.]+)\s*Porsi\)""".toRegex()
+            val match = portionRegex.find(item.namaProdukSnapshot)
+            val customPortion = match?.groupValues?.get(1)?.toDoubleOrNull()
+            
+            val cleanedName = if (customPortion != null) {
+                item.namaProdukSnapshot.replace(" ($customPortion Porsi)", "")
+            } else {
+                item.namaProdukSnapshot
+            }
+            
+            sb.append("[L]$cleanedName\n")
+            
+            val visualQty = if (customPortion != null) {
+                customPortion * item.qty
+            } else {
+                item.qty.toDouble()
+            }
+            val visualQtyStr = if (visualQty % 1.0 == 0.0) visualQty.toInt().toString() else visualQty.toString()
             
             val qtyStr = if (showUnitQty) {
-                val unit = if (name.contains("es ", ignoreCase = true) ||
-                              name.contains("teh", ignoreCase = true) ||
-                              name.contains("jeruk", ignoreCase = true) ||
-                              name.contains("kopi", ignoreCase = true) ||
-                              name.contains("milo", ignoreCase = true) ||
-                              name.contains("susu", ignoreCase = true) ||
-                              name.contains("soda", ignoreCase = true) ||
-                              name.contains("cola", ignoreCase = true) ||
-                              name.contains("fanta", ignoreCase = true) ||
-                              name.contains("sprite", ignoreCase = true) ||
-                              name.contains("frestea", ignoreCase = true) ||
-                              name.contains("air ", ignoreCase = true)) {
+                val unit = if (cleanedName.contains("es ", ignoreCase = true) ||
+                              cleanedName.contains("teh", ignoreCase = true) ||
+                              cleanedName.contains("jeruk", ignoreCase = true) ||
+                              cleanedName.contains("kopi", ignoreCase = true) ||
+                              cleanedName.contains("milo", ignoreCase = true) ||
+                              cleanedName.contains("susu", ignoreCase = true) ||
+                              cleanedName.contains("soda", ignoreCase = true) ||
+                              cleanedName.contains("cola", ignoreCase = true) ||
+                              cleanedName.contains("fanta", ignoreCase = true) ||
+                              cleanedName.contains("sprite", ignoreCase = true) ||
+                              cleanedName.contains("frestea", ignoreCase = true) ||
+                              cleanedName.contains("air ", ignoreCase = true)) {
                     "Gelas"
                 } else {
                     "Porsi"
                 }
-                "${item.qty} $unit"
+                "$visualQtyStr $unit"
             } else {
-                "${item.qty}"
+                visualQtyStr
             }
             sb.append("[L]  $qtyStr x ${formatRupiah(item.hargaSaatItu)}[R]${formatRupiah(item.subtotal)}\n")
         }
