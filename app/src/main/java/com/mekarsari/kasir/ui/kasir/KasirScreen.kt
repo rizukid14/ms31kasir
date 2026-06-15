@@ -360,7 +360,8 @@ fun CartItemRow(
     onEditPortion: (Double?) -> Unit,
     onToggleHalfPortion: () -> Unit
 ) {
-    var showEditDialog by remember { mutableStateOf(false) }
+    var showPriceEditDialog by remember { mutableStateOf(false) }
+    var showPortionEditDialog by remember { mutableStateOf(false) }
     var tempPriceText by remember { mutableStateOf(item.customHarga.toString()) }
     var selectedPortion by remember { mutableStateOf<Double?>(item.customPortion) }
 
@@ -376,8 +377,7 @@ fun CartItemRow(
                 .weight(1f)
                 .clickable {
                     tempPriceText = item.customHarga.toString()
-                    selectedPortion = item.customPortion
-                    showEditDialog = true
+                    showPriceEditDialog = true
                 }
         ) {
             val displayName = when {
@@ -446,11 +446,22 @@ fun CartItemRow(
                 Text("-", fontWeight = FontWeight.Bold)
             }
 
-            Text(
-                text = item.quantity.toString(),
-                fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.bodyMedium
-            )
+            // Clickable quantity text to adjust fractional portions
+            Box(
+                modifier = Modifier
+                    .clickable {
+                        selectedPortion = item.customPortion
+                        showPortionEditDialog = true
+                    }
+                    .padding(horizontal = 8.dp)
+            ) {
+                Text(
+                    text = item.quantity.toString(),
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (item.customPortion != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                )
+            }
 
             OutlinedButton(
                 onClick = onIncrement,
@@ -463,15 +474,59 @@ fun CartItemRow(
         }
     }
 
-    if (showEditDialog) {
+    // Dialog 1: Sesuaikan Harga Barang (Klik Nama / Harga)
+    if (showPriceEditDialog) {
         AlertDialog(
-            onDismissRequest = { showEditDialog = false },
-            title = { Text("Sesuaikan Porsi / Harga") },
+            onDismissRequest = { showPriceEditDialog = false },
+            title = { Text("Sesuaikan Harga Barang") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Harga Master: ${formatRupiah(item.product.harga)}")
-                    
-                    Text("Pilih Porsi Pecahan (Eceran):", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    OutlinedTextField(
+                        value = tempPriceText,
+                        onValueChange = { tempPriceText = it },
+                        label = { Text("Harga Baru (Rupiah)") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val parsed = tempPriceText.toLongOrNull()
+                        if (parsed != null && parsed >= 0) {
+                            onEditPrice(parsed)
+                        }
+                        showPriceEditDialog = false
+                    }
+                ) {
+                    Text("Simpan")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        onEditPrice(item.product.harga)
+                        showPriceEditDialog = false
+                    }
+                ) {
+                    Text("Reset Asli")
+                }
+            }
+        )
+    }
+
+    // Dialog 2: Sesuaikan Porsi Pecahan (Klik Angka Quantity)
+    if (showPortionEditDialog) {
+        AlertDialog(
+            onDismissRequest = { showPortionEditDialog = false },
+            title = { Text("Sesuaikan Porsi Pecahan") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Porsi Saat Ini: ${if (item.customPortion != null) "${item.customPortion} Porsi" else "Normal (1.0 Porsi)"}")
+                    Text("Pilih Pecahan Eceran:", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
                     
                     // Horizontal scrollable chips for portions 0.1 to 1.0
                     androidx.compose.foundation.lazy.LazyRow(
@@ -487,40 +542,21 @@ fun CartItemRow(
                                 onClick = {
                                     if (p == 1.0) {
                                         selectedPortion = null
-                                        tempPriceText = item.product.harga.toString()
                                     } else {
                                         selectedPortion = p
-                                        tempPriceText = (item.product.harga * p).toLong().toString()
                                     }
                                 },
                                 label = { Text(text = if (p == 1.0) "Normal" else p.toString(), fontSize = 11.sp) }
                             )
                         }
                     }
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    OutlinedTextField(
-                        value = tempPriceText,
-                        onValueChange = { 
-                            tempPriceText = it 
-                            selectedPortion = null // Clear portion preset if user edits raw price directly
-                        },
-                        label = { Text("Harga Baru (Rupiah)") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.fillMaxWidth()
-                    )
                 }
             },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        val parsed = tempPriceText.toLongOrNull()
-                        if (parsed != null && parsed >= 0) {
-                            onEditPortion(selectedPortion)
-                            onEditPrice(parsed)
-                        }
-                        showEditDialog = false
+                        onEditPortion(selectedPortion)
+                        showPortionEditDialog = false
                     }
                 ) {
                     Text("Simpan")
@@ -530,11 +566,10 @@ fun CartItemRow(
                 TextButton(
                     onClick = {
                         onEditPortion(null)
-                        onEditPrice(item.product.harga)
-                        showEditDialog = false
+                        showPortionEditDialog = false
                     }
                 ) {
-                    Text("Reset Asli")
+                    Text("Reset Normal")
                 }
             }
         )
