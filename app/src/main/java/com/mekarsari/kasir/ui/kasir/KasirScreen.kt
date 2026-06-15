@@ -615,6 +615,7 @@ fun PaymentBottomSheet(
     val nomorMeja by viewModel.nomorMeja.collectAsState()
 
     var applyTax by remember { mutableStateOf(initialTaxPercentage > 0.0) }
+    var showPrintConfirmDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(initialTaxPercentage) {
         applyTax = initialTaxPercentage > 0.0
@@ -987,6 +988,49 @@ fun PaymentBottomSheet(
             ) {
                 Button(
                     onClick = {
+                        showPrintConfirmDialog = true
+                    },
+                    enabled = canCheckout,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("Bayar & Cetak Struk", fontWeight = FontWeight.Bold)
+                }
+
+                OutlinedButton(
+                    onClick = {
+                        scope.launch {
+                            val result = viewModel.checkout(activeTaxPercent, nomorMeja)
+                            if (result.isSuccess) {
+                                onPaymentSuccess(result.getOrNull() ?: 0)
+                            } else {
+                                Toast.makeText(context, "Checkout gagal: ${result.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    },
+                    enabled = canCheckout,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(46.dp),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("Simpan Transaksi", fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+
+    if (showPrintConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showPrintConfirmDialog = false },
+            title = { Text("Konfirmasi Cetak Struk") },
+            text = { Text("Apakah Anda yakin ingin menyelesaikan pembayaran dan mencetak struk transaksi? Pastikan kertas printer thermal tersedia.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showPrintConfirmDialog = false
                         scope.launch {
                             val macAddress = viewModel.getPrinterMac()
                             val logoUri = viewModel.getLogoUri()
@@ -1018,7 +1062,8 @@ fun PaymentBottomSheet(
                                                 namaProdukSnapshot = if (item.isHalfPortion) "${item.product.nama} (1/2 Porsi)" else item.product.nama,
                                                 hargaSaatItu = item.customHarga,
                                                 qty = item.quantity,
-                                                subtotal = item.subtotal
+                                                subtotal = item.subtotal,
+                                                porsiCustom = item.customPortion
                                             )
                                         }
                                     )
@@ -1053,37 +1098,19 @@ fun PaymentBottomSheet(
                                 Toast.makeText(context, "Checkout gagal: ${result.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
                             }
                         }
-                    },
-                    enabled = canCheckout,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp),
-                    shape = RoundedCornerShape(8.dp)
+                    }
                 ) {
-                    Text("Bayar & Cetak Struk", fontWeight = FontWeight.Bold)
+                    Text("Cetak")
                 }
-
-                OutlinedButton(
-                    onClick = {
-                        scope.launch {
-                            val result = viewModel.checkout(activeTaxPercent, nomorMeja)
-                            if (result.isSuccess) {
-                                onPaymentSuccess(result.getOrNull() ?: 0)
-                            } else {
-                                Toast.makeText(context, "Checkout gagal: ${result.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
-                            }
-                        }
-                    },
-                    enabled = canCheckout,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(46.dp),
-                    shape = RoundedCornerShape(8.dp)
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showPrintConfirmDialog = false }
                 ) {
-                    Text("Simpan Transaksi", fontWeight = FontWeight.Bold)
+                    Text("Batal")
                 }
             }
-        }
+        )
     }
 }
 

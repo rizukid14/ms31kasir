@@ -53,6 +53,7 @@ fun RiwayatDetailScreen(
     val formatter = remember { ReceiptFormatter() }
 
     var selectedTab by remember { mutableStateOf(0) }
+    var showPrintConfirmDialog by remember { mutableStateOf(false) }
     var shopName by remember { mutableStateOf("Mekar Sari") }
     var shopAddress by remember { mutableStateOf("") }
     var shopAddress2 by remember { mutableStateOf("") }
@@ -315,45 +316,7 @@ fun RiwayatDetailScreen(
 
                     Button(
                         onClick = {
-                            scope.launch {
-                                val macAddress = viewModel.getPrinterMac()
-                                val store = viewModel.getStoreDetails()
-                                val rSettings = viewModel.getReceiptSettings()
-                                val logoBitmap = com.mekarsari.kasir.printer.BitmapHelper.loadBitmapFromUri(context, viewModel.getLogoUri())
-                                
-                                if (macAddress.isEmpty()) {
-                                    Toast.makeText(context, "Atur printer Bluetooth di halaman Settings terlebih dahulu", Toast.LENGTH_LONG).show()
-                                    return@launch
-                                }
-
-                                 val receiptStr = formatter.format(
-                                     shopName = store.first,
-                                     shopAddress = store.second,
-                                     shopAddress2 = store.third,
-                                     transactionWithItems = detail,
-                                     customHeader = rSettings["receipt_header"] ?: "",
-                                     customFooter1 = rSettings["receipt_footer1"] ?: "",
-                                     customFooter2 = rSettings["receipt_footer2"] ?: "",
-                                     spacingTop = rSettings["receipt_spacing_top"]?.toIntOrNull() ?: 1,
-                                     spacingBottom = rSettings["receipt_spacing_bottom"]?.toIntOrNull() ?: 4,
-                                     showLogo = rSettings["show_logo"]?.toBoolean() ?: true,
-                                     showReceiptCode = rSettings["show_receipt_code"]?.toBoolean() ?: false,
-                                     showSeqNumber = rSettings["show_seq_number"]?.toBoolean() ?: false,
-                                     showUnitQty = rSettings["show_unit_qty"]?.toBoolean() ?: false,
-                                     showNomorMeja = rSettings["show_nomor_meja"]?.toBoolean() ?: true,
-                                     showReceiptNumber = rSettings["show_receipt_number"]?.toBoolean() ?: true,
-                                     showTotalQty = rSettings["show_total_qty"]?.toBoolean() ?: false,
-                                     showSignatureSection = rSettings["show_signature_section"]?.toBoolean() ?: true,
-                                     namaKasir = transaction.namaKasir ?: rSettings["nama_kasir"] ?: ""
-                                 )
-                                 val logoWidth = rSettings["logo_width_char"]?.toIntOrNull()?.let { if (it > 0) it else 12 } ?: 12
-                                 val printResult = printerManager.printReceipt(macAddress, receiptStr, logoBitmap, logoWidth)
-                                if (printResult.isSuccess) {
-                                    Toast.makeText(context, "Struk dicetak ulang", Toast.LENGTH_SHORT).show()
-                                } else {
-                                    Toast.makeText(context, "Gagal mencetak: ${printResult.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
-                                }
-                            }
+                            showPrintConfirmDialog = true
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -364,6 +327,69 @@ fun RiwayatDetailScreen(
                         Text("Cetak Ulang Struk", fontWeight = FontWeight.Bold)
                     }
                 }
+            }
+
+            if (showPrintConfirmDialog) {
+                AlertDialog(
+                    onDismissRequest = { showPrintConfirmDialog = false },
+                    title = { Text("Konfirmasi Cetak Ulang") },
+                    text = { Text("Apakah Anda yakin ingin mencetak ulang struk transaksi ini? Pastikan kertas printer thermal tersedia.") },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                showPrintConfirmDialog = false
+                                scope.launch {
+                                    val macAddress = viewModel.getPrinterMac()
+                                    val store = viewModel.getStoreDetails()
+                                    val rSettings = viewModel.getReceiptSettings()
+                                    val logoBitmap = com.mekarsari.kasir.printer.BitmapHelper.loadBitmapFromUri(context, viewModel.getLogoUri())
+                                    
+                                    if (macAddress.isEmpty()) {
+                                        Toast.makeText(context, "Atur printer Bluetooth di halaman Settings terlebih dahulu", Toast.LENGTH_LONG).show()
+                                        return@launch
+                                    }
+
+                                     val receiptStr = formatter.format(
+                                         shopName = store.first,
+                                         shopAddress = store.second,
+                                         shopAddress2 = store.third,
+                                         transactionWithItems = detail,
+                                         customHeader = rSettings["receipt_header"] ?: "",
+                                         customFooter1 = rSettings["receipt_footer1"] ?: "",
+                                         customFooter2 = rSettings["receipt_footer2"] ?: "",
+                                         spacingTop = rSettings["receipt_spacing_top"]?.toIntOrNull() ?: 1,
+                                         spacingBottom = rSettings["receipt_spacing_bottom"]?.toIntOrNull() ?: 4,
+                                         showLogo = rSettings["show_logo"]?.toBoolean() ?: true,
+                                         showReceiptCode = rSettings["show_receipt_code"]?.toBoolean() ?: false,
+                                         showSeqNumber = rSettings["show_seq_number"]?.toBoolean() ?: false,
+                                         showUnitQty = rSettings["show_unit_qty"]?.toBoolean() ?: false,
+                                         showNomorMeja = rSettings["show_nomor_meja"]?.toBoolean() ?: true,
+                                         showReceiptNumber = rSettings["show_receipt_number"]?.toBoolean() ?: true,
+                                         showTotalQty = rSettings["show_total_qty"]?.toBoolean() ?: false,
+                                         showSignatureSection = rSettings["show_signature_section"]?.toBoolean() ?: true,
+                                         namaKasir = transaction.namaKasir ?: rSettings["nama_kasir"] ?: ""
+                                     )
+                                     val logoWidth = rSettings["logo_width_char"]?.toIntOrNull()?.let { if (it > 0) it else 12 } ?: 12
+                                     val printResult = printerManager.printReceipt(macAddress, receiptStr, logoBitmap, logoWidth)
+                                    if (printResult.isSuccess) {
+                                        Toast.makeText(context, "Struk dicetak ulang", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        Toast.makeText(context, "Gagal mencetak: ${printResult.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
+                                    }
+                                }
+                            }
+                        ) {
+                            Text("Cetak")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = { showPrintConfirmDialog = false }
+                        ) {
+                            Text("Batal")
+                        }
+                    }
+                )
             }
         } ?: run {
             Box(modifier = modifier.fillMaxSize()) {
