@@ -40,4 +40,7 @@ interface TransactionDao {
 
     @Query("DELETE FROM transactions WHERE created_at >= :startMs AND created_at < :endMs")
     suspend fun deleteTransactionsByTimeRange(startMs: Long, endMs: Long)
+
+    @Query("DELETE FROM transactions WHERE id = :id")
+    suspend fun deleteTransactionById(id: Int)
 }

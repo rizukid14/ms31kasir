@@ -32,4 +32,8 @@ class TransactionRepository(private val transactionDao: TransactionDao) {
         // caller already knows count from reportState)
         return 0
     }
+
+    suspend fun deleteTransactionById(id: Int) {
+        transactionDao.deleteTransactionById(id)
+    }
 }

@@ -13,6 +13,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Print
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -280,6 +281,51 @@ fun RiwayatDetailScreen(
                     Icon(imageVector = Icons.Default.Print, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Cetak Ulang Struk", fontWeight = FontWeight.Bold)
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                var showDeleteConfirmDialog by remember { mutableStateOf(false) }
+
+                if (showDeleteConfirmDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showDeleteConfirmDialog = false },
+                        title = { Text("Hapus Transaksi") },
+                        text = { Text("Apakah Anda yakin ingin menghapus transaksi TX#${detail.transaction.id}? Tindakan ini tidak dapat dibatalkan.") },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    showDeleteConfirmDialog = false
+                                    viewModel.deleteTransaction(detail.transaction.id) {
+                                        Toast.makeText(context, "Transaksi berhasil dihapus", Toast.LENGTH_SHORT).show()
+                                        onNavigateBack()
+                                    }
+                                }
+                            ) {
+                                Text("Hapus", color = MaterialTheme.colorScheme.error)
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showDeleteConfirmDialog = false }) {
+                                Text("Batal")
+                            }
+                        }
+                    )
+                }
+
+                OutlinedButton(
+                    onClick = { showDeleteConfirmDialog = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    ),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error)
+                ) {
+                    Icon(imageVector = Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Hapus Transaksi", fontWeight = FontWeight.Bold)
                 }
             }
         } ?: run {

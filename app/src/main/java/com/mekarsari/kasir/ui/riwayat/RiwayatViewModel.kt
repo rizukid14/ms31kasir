@@ -65,4 +65,14 @@ class RiwayatViewModel(
             "alamat_toko2" to (settingRepository.getSettingValue("alamat_toko2") ?: "")
         )
     }
+
+    fun deleteTransaction(id: Int, onDone: () -> Unit = {}) {
+        viewModelScope.launch {
+            transactionRepository.deleteTransactionById(id)
+            if (_selectedTransaction.value?.transaction?.id == id) {
+                _selectedTransaction.value = null
+            }
+            onDone()
+        }
+    }
 }
