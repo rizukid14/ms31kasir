@@ -170,7 +170,7 @@ class ReceiptFormatter {
         }
         if (showReceiptCode) {
             sb.append("\n")
-            sb.append("[C]<qrcode size=\"30\">TX#${transaction.id}</qrcode>\n")
+            sb.append("[C]<qrcode size=\"30\">https://maps.app.goo.gl/9vTmPHFS1rZZ24MbA</qrcode>\n")
         }
         for (i in 0 until spacingBottom) {
             sb.append("\n")
