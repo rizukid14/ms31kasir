@@ -6,7 +6,8 @@ data class CartItem(
     val product: Product,
     val quantity: Int,
     val customHarga: Long = product.harga,
-    val isHalfPortion: Boolean = false
+    val isHalfPortion: Boolean = false,
+    val customPortion: Double? = null
 ) {
     val subtotal: Long
         get() = customHarga * quantity

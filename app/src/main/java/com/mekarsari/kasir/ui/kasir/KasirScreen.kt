@@ -357,10 +357,12 @@ fun CartItemRow(
     onIncrement: () -> Unit,
     onDecrement: () -> Unit,
     onEditPrice: (Long) -> Unit,
+    onEditPortion: (Double?) -> Unit,
     onToggleHalfPortion: () -> Unit
 ) {
     var showEditDialog by remember { mutableStateOf(false) }
     var tempPriceText by remember { mutableStateOf(item.customHarga.toString()) }
+    var selectedPortion by remember { mutableStateOf<Double?>(item.customPortion) }
 
     Row(
         modifier = Modifier
@@ -374,11 +376,17 @@ fun CartItemRow(
                 .weight(1f)
                 .clickable {
                     tempPriceText = item.customHarga.toString()
+                    selectedPortion = item.customPortion
                     showEditDialog = true
                 }
         ) {
+            val displayName = when {
+                item.isHalfPortion -> "${item.product.nama} (1/2 Porsi)"
+                item.customPortion != null -> "${item.product.nama} (${item.customPortion} Porsi)"
+                else -> item.product.nama
+            }
             Text(
-                text = if (item.isHalfPortion) "${item.product.nama} (1/2 Porsi)" else item.product.nama,
+                text = displayName,
                 fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.bodyMedium
             )
@@ -458,16 +466,49 @@ fun CartItemRow(
     if (showEditDialog) {
         AlertDialog(
             onDismissRequest = { showEditDialog = false },
-            title = { Text("Sesuaikan Harga Barang") },
+            title = { Text("Sesuaikan Porsi / Harga") },
             text = {
-                Column {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("Harga Master: ${formatRupiah(item.product.harga)}")
-                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Text("Pilih Porsi Pecahan (Eceran):", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                    
+                    // Horizontal scrollable chips for portions 0.1 to 1.0
+                    androidx.compose.foundation.lazy.LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        val portions = listOf(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0)
+                        items(portions) { p ->
+                            val isSelected = selectedPortion == p || (p == 1.0 && selectedPortion == null)
+                            @OptIn(ExperimentalMaterial3Api::class)
+                            FilterChip(
+                                selected = isSelected,
+                                onClick = {
+                                    if (p == 1.0) {
+                                        selectedPortion = null
+                                        tempPriceText = item.product.harga.toString()
+                                    } else {
+                                        selectedPortion = p
+                                        tempPriceText = (item.product.harga * p).toLong().toString()
+                                    }
+                                },
+                                label = { Text(text = if (p == 1.0) "Normal" else p.toString(), fontSize = 11.sp) }
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
                     OutlinedTextField(
                         value = tempPriceText,
-                        onValueChange = { tempPriceText = it },
+                        onValueChange = { 
+                            tempPriceText = it 
+                            selectedPortion = null // Clear portion preset if user edits raw price directly
+                        },
                         label = { Text("Harga Baru (Rupiah)") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             },
@@ -476,6 +517,7 @@ fun CartItemRow(
                     onClick = {
                         val parsed = tempPriceText.toLongOrNull()
                         if (parsed != null && parsed >= 0) {
+                            onEditPortion(selectedPortion)
                             onEditPrice(parsed)
                         }
                         showEditDialog = false
@@ -487,6 +529,7 @@ fun CartItemRow(
             dismissButton = {
                 TextButton(
                     onClick = {
+                        onEditPortion(null)
                         onEditPrice(item.product.harga)
                         showEditDialog = false
                     }
@@ -703,6 +746,7 @@ fun PaymentBottomSheet(
                                             onIncrement = { viewModel.incrementQuantity(item) },
                                             onDecrement = { viewModel.decrementQuantity(item) },
                                             onEditPrice = { newPrice -> viewModel.updateItemPrice(item, newPrice) },
+                                            onEditPortion = { portion -> viewModel.updateItemPortion(item, portion) },
                                             onToggleHalfPortion = { viewModel.toggleHalfPortion(item) }
                                         )
                                         Divider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))

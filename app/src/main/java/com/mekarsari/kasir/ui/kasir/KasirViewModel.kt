@@ -50,20 +50,30 @@ class KasirViewModel(
         
         // Map Snapshot items to CartItems
         val newCart = txWithItems.items.map { item ->
+            val isHalf = item.namaProdukSnapshot.contains("(1/2 Porsi)")
+            val portionRegex = """\(([0-9.]+)\s*Porsi\)""".toRegex()
+            val match = portionRegex.find(item.namaProdukSnapshot)
+            val customPortion = match?.groupValues?.get(1)?.toDoubleOrNull()
+            
+            var cleanedName = item.namaProdukSnapshot.replace(" (1/2 Porsi)", "")
+            if (customPortion != null) {
+                cleanedName = cleanedName.replace(" ($customPortion Porsi)", "")
+            }
+
             val matchedProduct = products.value.find { it.id == item.productId }
                 ?: Product(
                     id = item.productId,
-                    nama = item.namaProdukSnapshot.replace(" (1/2 Porsi)", ""),
+                    nama = cleanedName,
                     harga = item.hargaSaatItu,
                     stok = 999,
                     kategori = ""
                 )
-            val isHalf = item.namaProdukSnapshot.contains("(1/2 Porsi)")
             CartItem(
                 product = matchedProduct,
                 quantity = item.qty,
                 customHarga = item.hargaSaatItu,
-                isHalfPortion = isHalf
+                isHalfPortion = isHalf,
+                customPortion = customPortion
             )
         }
         _cart.value = newCart
@@ -188,7 +198,27 @@ class KasirViewModel(
         val currentList = _cart.value.toMutableList()
         val index = currentList.indexOfFirst { it.product.id == item.product.id && it.isHalfPortion == item.isHalfPortion }
         if (index >= 0) {
-            currentList[index] = item.copy(customHarga = newPrice)
+            currentList[index] = item.copy(
+                customHarga = newPrice,
+                customPortion = null // Reset custom portion if raw price is manually overridden
+            )
+            _cart.value = currentList
+        }
+    }
+
+    fun updateItemPortion(item: CartItem, portion: Double?) {
+        val currentList = _cart.value.toMutableList()
+        val index = currentList.indexOfFirst { it.product.id == item.product.id && it.isHalfPortion == item.isHalfPortion }
+        if (index >= 0) {
+            val targetPrice = if (portion != null) {
+                (item.product.harga * portion).toLong()
+            } else {
+                item.product.harga
+            }
+            currentList[index] = item.copy(
+                customPortion = portion,
+                customHarga = targetPrice
+            )
             _cart.value = currentList
         }
     }
@@ -250,10 +280,10 @@ class KasirViewModel(
             val namaKasirSnapshot = settingRepository.getSettingValue("nama_kasir")?.takeIf { it.isNotBlank() }
 
             val items = cartItems.map { item ->
-                val nameSnapshot = if (item.isHalfPortion) {
-                    "${item.product.nama} (1/2 Porsi)"
-                } else {
-                    item.product.nama
+                val nameSnapshot = when {
+                    item.isHalfPortion -> "${item.product.nama} (1/2 Porsi)"
+                    item.customPortion != null -> "${item.product.nama} (${item.customPortion} Porsi)"
+                    else -> item.product.nama
                 }
                 TransactionItem(
                     transactionId = editId ?: 0,
