@@ -19,6 +19,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -37,7 +38,7 @@ fun ProdukScreen(
 
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategoryFilter by remember { mutableStateOf("Semua") }
-    var groupByKategori by remember { mutableStateOf(true) }
+    var sortByAZ by remember { mutableStateOf(false) }
 
     val categories = remember(products) {
         listOf("Semua") + products.mapNotNull { it.kategori }.distinct().sorted()
@@ -54,24 +55,24 @@ fun ProdukScreen(
 
     val customProductOrder by viewModel.customProductOrder.collectAsState()
 
-    val sortedProducts = remember(filteredProducts, customProductOrder) {
-        val orderMap = customProductOrder.withIndex().associate { it.value to it.index }
-        filteredProducts.sortedWith(compareBy { orderMap[it.id] ?: Int.MAX_VALUE })
+    val sortedProducts = remember(filteredProducts, customProductOrder, sortByAZ) {
+        if (sortByAZ) {
+            filteredProducts.sortedBy { it.nama.lowercase() }
+        } else {
+            val orderMap = customProductOrder.withIndex().associate { it.value to it.index }
+            filteredProducts.sortedWith(compareBy { orderMap[it.id] ?: Int.MAX_VALUE })
+        }
     }
 
-    val groupedProducts = remember(sortedProducts, groupByKategori) {
-        if (groupByKategori) {
-            sortedProducts.groupBy { 
-                val kat = it.kategori?.trim()
-                if (kat.isNullOrEmpty()) {
-                    "Lainnya"
-                } else {
-                    kat.lowercase().replaceFirstChar { c -> c.uppercase() }
-                }
-            }.toSortedMap()
-        } else {
-            sortedMapOf("" to sortedProducts)
-        }
+    val groupedProducts = remember(sortedProducts) {
+        sortedProducts.groupBy { 
+            val kat = it.kategori?.trim()
+            if (kat.isNullOrEmpty()) {
+                "Lainnya"
+            } else {
+                kat.lowercase().replaceFirstChar { c -> c.uppercase() }
+            }
+        }.toSortedMap()
     }
 
     var selectedTab by remember { mutableStateOf(0) }
@@ -167,12 +168,21 @@ fun ProdukScreen(
                             }
                         }
 
-                        // Group By Category Toggle
-                        FilterChip(
-                            selected = groupByKategori,
-                            onClick = { groupByKategori = !groupByKategori },
-                            label = { Text("Grup Jenis") }
-                        )
+                        // Symmetrical Sort A-Z Toggle Button
+                        OutlinedButton(
+                            onClick = { sortByAZ = !sortByAZ },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = if (sortByAZ) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
+                                contentColor = if (sortByAZ) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.primary
+                            ),
+                            border = BorderStroke(
+                                1.dp,
+                                if (sortByAZ) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                            )
+                        ) {
+                            Text(if (sortByAZ) "✓ Urutan: A-Z" else "Urutan: A-Z", maxLines = 1)
+                        }
                     }
                 }
 
@@ -192,7 +202,7 @@ fun ProdukScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         groupedProducts.forEach { (category, productList) ->
-                            if (groupByKategori && category.isNotEmpty()) {
+                            if (category.isNotEmpty()) {
                                 stickyHeader {
                                     Surface(
                                         modifier = Modifier.fillMaxWidth(),
