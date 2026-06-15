@@ -353,12 +353,10 @@ fun CompactProductRow(
 @Composable
 fun CartItemRow(
     item: CartItem,
-    isHalfPortionActive: Boolean = false,
     onIncrement: () -> Unit,
     onDecrement: () -> Unit,
     onEditPrice: (Long) -> Unit,
-    onEditPortion: (Double?) -> Unit,
-    onToggleHalfPortion: () -> Unit
+    onEditPortion: (Double?) -> Unit
 ) {
     var showPriceEditDialog by remember { mutableStateOf(false) }
     var showPortionEditDialog by remember { mutableStateOf(false) }
@@ -381,7 +379,6 @@ fun CartItemRow(
                 }
         ) {
             val displayName = when {
-                item.isHalfPortion -> "${item.product.nama} (1/2 Porsi)"
                 item.customPortion != null -> "${item.product.nama} (${item.customPortion} Porsi)"
                 else -> item.product.nama
             }
@@ -392,43 +389,27 @@ fun CartItemRow(
             )
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                @OptIn(ExperimentalMaterial3Api::class)
-                FilterChip(
-                    selected = item.isHalfPortion || isHalfPortionActive,
-                    onClick = onToggleHalfPortion,
-                    label = { Text("1/2 Porsi", fontSize = 10.sp) },
-                    modifier = Modifier.height(24.dp),
-                    colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        selectedLabelColor = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
+                Text(
+                    text = formatRupiah(item.customHarga),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.SemiBold
                 )
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Edit harga",
+                    modifier = Modifier.size(12.dp),
+                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                )
+                if (item.customHarga != item.product.harga) {
                     Text(
-                        text = formatRupiah(item.customHarga),
+                        text = "(${formatRupiah(item.product.harga)})",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.SemiBold
+                        color = MaterialTheme.colorScheme.outline,
+                        textDecoration = TextDecoration.LineThrough
                     )
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = "Edit harga",
-                        modifier = Modifier.size(12.dp),
-                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
-                    )
-                    if (item.customHarga != item.product.harga && (!item.isHalfPortion || item.customHarga != item.product.harga / 2)) {
-                        Text(
-                            text = "(${formatRupiah(item.product.harga)})",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.outline,
-                            textDecoration = TextDecoration.LineThrough
-                        )
-                    }
                 }
             }
         }
@@ -799,15 +780,12 @@ fun PaymentBottomSheet(
                                     verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     items(currentCart) { item ->
-                                        val hasHalfPortion = currentCart.any { it.product.id == item.product.id && it.isHalfPortion }
                                         CartItemRow(
                                             item = item,
-                                            isHalfPortionActive = hasHalfPortion,
                                             onIncrement = { viewModel.incrementQuantity(item) },
                                             onDecrement = { viewModel.decrementQuantity(item) },
                                             onEditPrice = { newPrice -> viewModel.updateItemPrice(item, newPrice) },
-                                            onEditPortion = { portion -> viewModel.updateItemPortion(item, portion) },
-                                            onToggleHalfPortion = { viewModel.toggleHalfPortion(item) }
+                                            onEditPortion = { portion -> viewModel.updateItemPortion(item, portion) }
                                         )
                                         Divider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                                     }
@@ -1059,7 +1037,7 @@ fun PaymentBottomSheet(
                                             TransactionItem(
                                                 transactionId = newTxId,
                                                 productId = item.product.id,
-                                                namaProdukSnapshot = if (item.isHalfPortion) "${item.product.nama} (1/2 Porsi)" else item.product.nama,
+                                                namaProdukSnapshot = item.product.nama,
                                                 hargaSaatItu = item.customHarga,
                                                 qty = item.quantity,
                                                 subtotal = item.subtotal,
@@ -1280,7 +1258,7 @@ fun ReceiptPreview(
                 // Items List
                 cartItems.forEach { item ->
                     Column(modifier = Modifier.fillMaxWidth()) {
-                        val displayName = if (item.isHalfPortion) "${item.product.nama} (1/2 Porsi)" else item.product.nama
+                        val displayName = item.product.nama
                         Text(
                             text = displayName,
                             fontSize = 11.sp,

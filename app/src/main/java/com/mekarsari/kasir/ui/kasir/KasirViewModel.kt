@@ -50,10 +50,10 @@ class KasirViewModel(
         
         // Map Snapshot items to CartItems
         val newCart = txWithItems.items.map { item ->
-            val isHalf = item.namaProdukSnapshot.contains("(1/2 Porsi)")
+            val isHalfOld = item.namaProdukSnapshot.contains("(1/2 Porsi)")
             val portionRegex = """\(([0-9.]+)\s*Porsi\)""".toRegex()
             val match = portionRegex.find(item.namaProdukSnapshot)
-            val customPortion = item.porsiCustom ?: match?.groupValues?.get(1)?.toDoubleOrNull()
+            val customPortion = item.porsiCustom ?: if (isHalfOld) 0.5 else match?.groupValues?.get(1)?.toDoubleOrNull()
             
             var cleanedName = item.namaProdukSnapshot.replace(" (1/2 Porsi)", "")
             val fallbackPortionStr = match?.groupValues?.get(1)
@@ -73,7 +73,6 @@ class KasirViewModel(
                 product = matchedProduct,
                 quantity = item.qty,
                 customHarga = item.hargaSaatItu,
-                isHalfPortion = isHalf,
                 customPortion = customPortion
             )
         }
@@ -159,7 +158,7 @@ class KasirViewModel(
 
     fun addToCart(product: Product) {
         val currentList = _cart.value.toMutableList()
-        val index = currentList.indexOfFirst { it.product.id == product.id && !it.isHalfPortion }
+        val index = currentList.indexOfFirst { it.product.id == product.id }
         if (index >= 0) {
             val item = currentList[index]
             currentList[index] = item.copy(quantity = item.quantity + 1)
@@ -171,7 +170,7 @@ class KasirViewModel(
 
     fun incrementQuantity(item: CartItem) {
         val currentList = _cart.value.toMutableList()
-        val index = currentList.indexOfFirst { it.product.id == item.product.id && it.isHalfPortion == item.isHalfPortion }
+        val index = currentList.indexOfFirst { it.product.id == item.product.id }
         if (index >= 0) {
             currentList[index] = item.copy(quantity = item.quantity + 1)
             _cart.value = currentList
@@ -180,7 +179,7 @@ class KasirViewModel(
 
     fun decrementQuantity(item: CartItem) {
         val currentList = _cart.value.toMutableList()
-        val index = currentList.indexOfFirst { it.product.id == item.product.id && it.isHalfPortion == item.isHalfPortion }
+        val index = currentList.indexOfFirst { it.product.id == item.product.id }
         if (index >= 0) {
             if (item.quantity > 1) {
                 currentList[index] = item.copy(quantity = item.quantity - 1)
@@ -197,7 +196,7 @@ class KasirViewModel(
 
     fun updateItemPrice(item: CartItem, newPrice: Long) {
         val currentList = _cart.value.toMutableList()
-        val index = currentList.indexOfFirst { it.product.id == item.product.id && it.isHalfPortion == item.isHalfPortion }
+        val index = currentList.indexOfFirst { it.product.id == item.product.id }
         if (index >= 0) {
             currentList[index] = item.copy(
                 customHarga = newPrice,
@@ -209,7 +208,7 @@ class KasirViewModel(
 
     fun updateItemPortion(item: CartItem, portion: Double?) {
         val currentList = _cart.value.toMutableList()
-        val index = currentList.indexOfFirst { it.product.id == item.product.id && it.isHalfPortion == item.isHalfPortion }
+        val index = currentList.indexOfFirst { it.product.id == item.product.id }
         if (index >= 0) {
             val targetPrice = if (portion != null) {
                 (item.product.harga * portion).toLong()
@@ -222,35 +221,6 @@ class KasirViewModel(
             )
             _cart.value = currentList
         }
-    }
-
-    fun toggleHalfPortion(item: CartItem) {
-        val currentList = _cart.value.toMutableList()
-        if (item.isHalfPortion) {
-            // Jika diklik pada item 1/2 porsi, batalkan/hapus item 1/2 porsi tersebut dari keranjang
-            val index = currentList.indexOfFirst { it.product.id == item.product.id && it.isHalfPortion }
-            if (index >= 0) {
-                currentList.removeAt(index)
-            }
-        } else {
-            // Jika diklik pada item normal, toggle keberadaan item 1/2 porsi untuk produk ini
-            val halfIndex = currentList.indexOfFirst { it.product.id == item.product.id && it.isHalfPortion }
-            if (halfIndex >= 0) {
-                // Jika sudah ada, hapus (cancel)
-                currentList.removeAt(halfIndex)
-            } else {
-                // Jika belum ada, buat entitas baru porsi 1/2 porsi (qty = 1)
-                currentList.add(
-                    CartItem(
-                        product = item.product,
-                        quantity = 1,
-                        customHarga = item.product.harga / 2,
-                        isHalfPortion = true
-                    )
-                )
-            }
-        }
-        _cart.value = currentList
     }
 
     fun clearCart() {
@@ -281,14 +251,10 @@ class KasirViewModel(
             val namaKasirSnapshot = settingRepository.getSettingValue("nama_kasir")?.takeIf { it.isNotBlank() }
 
             val items = cartItems.map { item ->
-                val nameSnapshot = when {
-                    item.isHalfPortion -> "${item.product.nama} (1/2 Porsi)"
-                    else -> item.product.nama
-                }
                 TransactionItem(
                     transactionId = editId ?: 0,
                     productId = item.product.id,
-                    namaProdukSnapshot = nameSnapshot,
+                    namaProdukSnapshot = item.product.nama,
                     hargaSaatItu = item.customHarga,
                     qty = item.quantity,
                     subtotal = item.subtotal,
