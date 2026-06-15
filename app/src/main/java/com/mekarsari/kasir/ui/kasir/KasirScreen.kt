@@ -520,33 +520,46 @@ fun CartItemRow(
 
     // Dialog 2: Sesuaikan Porsi Pecahan (Klik Angka Quantity)
     if (showPortionEditDialog) {
+        var tempPortionText by remember { mutableStateOf(item.customPortion?.toString() ?: "1.0") }
+
         AlertDialog(
             onDismissRequest = { showPortionEditDialog = false },
-            title = { Text("Sesuaikan Porsi Pecahan") },
+            title = { Text("Sesuaikan Jumlah Porsi") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Porsi Saat Ini: ${if (item.customPortion != null) "${item.customPortion} Porsi" else "Normal (1.0 Porsi)"}")
-                    Text("Pilih Pecahan Eceran:", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                    Text("Harga Master: ${formatRupiah(item.product.harga)} / porsi")
+                    Spacer(modifier = Modifier.height(4.dp))
+                    
+                    OutlinedTextField(
+                        value = tempPortionText,
+                        onValueChange = { 
+                            // Allow digits, dots, and empty string
+                            if (it.isEmpty() || it.all { char -> char.isDigit() || char == '.' }) {
+                                tempPortionText = it
+                            }
+                        },
+                        label = { Text("Jumlah Porsi (Desimal, contoh: 4.6)") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text("Pilihan Pintasan Cepat:", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
                     
                     // Horizontal scrollable chips for portions 0.1 to 1.0
                     androidx.compose.foundation.lazy.LazyRow(
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        val portions = listOf(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0)
+                        val portions = listOf(0.5, 0.7, 1.0, 1.5, 2.5, 3.5, 4.5)
                         items(portions) { p ->
-                            val isSelected = selectedPortion == p || (p == 1.0 && selectedPortion == null)
                             @OptIn(ExperimentalMaterial3Api::class)
                             FilterChip(
-                                selected = isSelected,
+                                selected = tempPortionText.toDoubleOrNull() == p,
                                 onClick = {
-                                    if (p == 1.0) {
-                                        selectedPortion = null
-                                    } else {
-                                        selectedPortion = p
-                                    }
+                                    tempPortionText = p.toString()
                                 },
-                                label = { Text(text = if (p == 1.0) "Normal" else p.toString(), fontSize = 11.sp) }
+                                label = { Text(text = if (p == 1.0) "Normal (1.0)" else p.toString(), fontSize = 11.sp) }
                             )
                         }
                     }
@@ -555,7 +568,11 @@ fun CartItemRow(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        onEditPortion(selectedPortion)
+                        val parsedPortion = tempPortionText.toDoubleOrNull()
+                        if (parsedPortion != null && parsedPortion > 0.0) {
+                            val finalPortion = if (parsedPortion == 1.0) null else parsedPortion
+                            onEditPortion(finalPortion)
+                        }
                         showPortionEditDialog = false
                     }
                 ) {
