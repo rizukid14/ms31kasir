@@ -353,6 +353,7 @@ fun CompactProductRow(
 @Composable
 fun CartItemRow(
     item: CartItem,
+    isHalfPortionActive: Boolean = false,
     onIncrement: () -> Unit,
     onDecrement: () -> Unit,
     onEditPrice: (Long) -> Unit,
@@ -387,7 +388,7 @@ fun CartItemRow(
             ) {
                 @OptIn(ExperimentalMaterial3Api::class)
                 FilterChip(
-                    selected = item.isHalfPortion,
+                    selected = item.isHalfPortion || isHalfPortionActive,
                     onClick = onToggleHalfPortion,
                     label = { Text("1/2 Porsi", fontSize = 10.sp) },
                     modifier = Modifier.height(24.dp),
@@ -695,8 +696,10 @@ fun PaymentBottomSheet(
                                     verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     items(currentCart) { item ->
+                                        val hasHalfPortion = currentCart.any { it.product.id == item.product.id && it.isHalfPortion }
                                         CartItemRow(
                                             item = item,
+                                            isHalfPortionActive = hasHalfPortion,
                                             onIncrement = { viewModel.incrementQuantity(item) },
                                             onDecrement = { viewModel.decrementQuantity(item) },
                                             onEditPrice = { newPrice -> viewModel.updateItemPrice(item, newPrice) },

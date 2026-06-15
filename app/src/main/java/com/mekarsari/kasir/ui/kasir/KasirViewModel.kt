@@ -195,29 +195,31 @@ class KasirViewModel(
 
     fun toggleHalfPortion(item: CartItem) {
         val currentList = _cart.value.toMutableList()
-        val index = currentList.indexOfFirst { it.product.id == item.product.id && it.isHalfPortion == item.isHalfPortion }
-        if (index >= 0) {
-            val oldItem = currentList[index]
-            val isHalf = !oldItem.isHalfPortion
-            val newPrice = if (isHalf) {
-                oldItem.product.harga / 2
-            } else {
-                oldItem.product.harga
-            }
-            
-            val targetIndex = currentList.indexOfFirst { it.product.id == item.product.id && it.isHalfPortion == isHalf }
-            if (targetIndex >= 0 && targetIndex != index) {
-                val targetItem = currentList[targetIndex]
-                currentList[targetIndex] = targetItem.copy(quantity = targetItem.quantity + oldItem.quantity)
+        if (item.isHalfPortion) {
+            // Jika diklik pada item 1/2 porsi, batalkan/hapus item 1/2 porsi tersebut dari keranjang
+            val index = currentList.indexOfFirst { it.product.id == item.product.id && it.isHalfPortion }
+            if (index >= 0) {
                 currentList.removeAt(index)
+            }
+        } else {
+            // Jika diklik pada item normal, toggle keberadaan item 1/2 porsi untuk produk ini
+            val halfIndex = currentList.indexOfFirst { it.product.id == item.product.id && it.isHalfPortion }
+            if (halfIndex >= 0) {
+                // Jika sudah ada, hapus (cancel)
+                currentList.removeAt(halfIndex)
             } else {
-                currentList[index] = oldItem.copy(
-                    isHalfPortion = isHalf,
-                    customHarga = newPrice
+                // Jika belum ada, buat entitas baru porsi 1/2 porsi (qty = 1)
+                currentList.add(
+                    CartItem(
+                        product = item.product,
+                        quantity = 1,
+                        customHarga = item.product.harga / 2,
+                        isHalfPortion = true
+                    )
                 )
             }
-            _cart.value = currentList
         }
+        _cart.value = currentList
     }
 
     fun clearCart() {
