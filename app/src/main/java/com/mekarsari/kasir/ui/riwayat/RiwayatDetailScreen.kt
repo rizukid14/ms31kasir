@@ -231,101 +231,104 @@ fun RiwayatDetailScreen(
                     }
                 }
 
-                // Print button
-                Button(
-                    onClick = {
-                        scope.launch {
-                            val macAddress = viewModel.getPrinterMac()
-                            val store = viewModel.getStoreDetails()
-                            val rSettings = viewModel.getReceiptSettings()
-                            val logoBitmap = com.mekarsari.kasir.printer.BitmapHelper.loadBitmapFromUri(context, viewModel.getLogoUri())
-                            
-                            if (macAddress.isEmpty()) {
-                                Toast.makeText(context, "Atur printer Bluetooth di halaman Settings terlebih dahulu", Toast.LENGTH_LONG).show()
-                                return@launch
-                            }
-
-                             val receiptStr = formatter.format(
-                                 shopName = store.first,
-                                 shopAddress = store.second,
-                                 shopAddress2 = store.third,
-                                 transactionWithItems = detail,
-                                 customHeader = rSettings["receipt_header"] ?: "",
-                                 customFooter1 = rSettings["receipt_footer1"] ?: "",
-                                 customFooter2 = rSettings["receipt_footer2"] ?: "",
-                                 spacingTop = rSettings["receipt_spacing_top"]?.toIntOrNull() ?: 1,
-                                 spacingBottom = rSettings["receipt_spacing_bottom"]?.toIntOrNull() ?: 4,
-                                 showLogo = rSettings["show_logo"]?.toBoolean() ?: true,
-                                 showReceiptCode = rSettings["show_receipt_code"]?.toBoolean() ?: false,
-                                 showSeqNumber = rSettings["show_seq_number"]?.toBoolean() ?: false,
-                                 showUnitQty = rSettings["show_unit_qty"]?.toBoolean() ?: false,
-                                 showNomorMeja = rSettings["show_nomor_meja"]?.toBoolean() ?: true,
-                                 showReceiptNumber = rSettings["show_receipt_number"]?.toBoolean() ?: true,
-                                 showTotalQty = rSettings["show_total_qty"]?.toBoolean() ?: false,
-                                 showSignatureSection = rSettings["show_signature_section"]?.toBoolean() ?: true,
-                                 namaKasir = rSettings["nama_kasir"] ?: "Kasir 1"
-                             )
-                             val logoWidth = rSettings["logo_width_char"]?.toIntOrNull()?.let { if (it > 0) it else 12 } ?: 12
-                             val printResult = printerManager.printReceipt(macAddress, receiptStr, logoBitmap, logoWidth)
-                            if (printResult.isSuccess) {
-                                Toast.makeText(context, "Struk dicetak ulang", Toast.LENGTH_SHORT).show()
-                            } else {
-                                Toast.makeText(context, "Gagal mencetak: ${printResult.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
-                            }
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
+                // Action buttons grouped closely together
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(imageVector = Icons.Default.Print, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Cetak Ulang Struk", fontWeight = FontWeight.Bold)
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                var showDeleteConfirmDialog by remember { mutableStateOf(false) }
-
-                if (showDeleteConfirmDialog) {
-                    AlertDialog(
-                        onDismissRequest = { showDeleteConfirmDialog = false },
-                        title = { Text("Hapus Transaksi") },
-                        text = { Text("Apakah Anda yakin ingin menghapus transaksi TX#${detail.transaction.id}? Tindakan ini tidak dapat dibatalkan.") },
-                        confirmButton = {
-                            TextButton(
-                                onClick = {
-                                    showDeleteConfirmDialog = false
-                                    viewModel.deleteTransaction(detail.transaction.id) {
-                                        Toast.makeText(context, "Transaksi berhasil dihapus", Toast.LENGTH_SHORT).show()
-                                        onNavigateBack()
-                                    }
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                val macAddress = viewModel.getPrinterMac()
+                                val store = viewModel.getStoreDetails()
+                                val rSettings = viewModel.getReceiptSettings()
+                                val logoBitmap = com.mekarsari.kasir.printer.BitmapHelper.loadBitmapFromUri(context, viewModel.getLogoUri())
+                                
+                                if (macAddress.isEmpty()) {
+                                    Toast.makeText(context, "Atur printer Bluetooth di halaman Settings terlebih dahulu", Toast.LENGTH_LONG).show()
+                                    return@launch
                                 }
-                            ) {
-                                Text("Hapus", color = MaterialTheme.colorScheme.error)
+
+                                 val receiptStr = formatter.format(
+                                     shopName = store.first,
+                                     shopAddress = store.second,
+                                     shopAddress2 = store.third,
+                                     transactionWithItems = detail,
+                                     customHeader = rSettings["receipt_header"] ?: "",
+                                     customFooter1 = rSettings["receipt_footer1"] ?: "",
+                                     customFooter2 = rSettings["receipt_footer2"] ?: "",
+                                     spacingTop = rSettings["receipt_spacing_top"]?.toIntOrNull() ?: 1,
+                                     spacingBottom = rSettings["receipt_spacing_bottom"]?.toIntOrNull() ?: 4,
+                                     showLogo = rSettings["show_logo"]?.toBoolean() ?: true,
+                                     showReceiptCode = rSettings["show_receipt_code"]?.toBoolean() ?: false,
+                                     showSeqNumber = rSettings["show_seq_number"]?.toBoolean() ?: false,
+                                     showUnitQty = rSettings["show_unit_qty"]?.toBoolean() ?: false,
+                                     showNomorMeja = rSettings["show_nomor_meja"]?.toBoolean() ?: true,
+                                     showReceiptNumber = rSettings["show_receipt_number"]?.toBoolean() ?: true,
+                                     showTotalQty = rSettings["show_total_qty"]?.toBoolean() ?: false,
+                                     showSignatureSection = rSettings["show_signature_section"]?.toBoolean() ?: true,
+                                     namaKasir = rSettings["nama_kasir"] ?: "Kasir 1"
+                                 )
+                                 val logoWidth = rSettings["logo_width_char"]?.toIntOrNull()?.let { if (it > 0) it else 12 } ?: 12
+                                 val printResult = printerManager.printReceipt(macAddress, receiptStr, logoBitmap, logoWidth)
+                                if (printResult.isSuccess) {
+                                    Toast.makeText(context, "Struk dicetak ulang", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    Toast.makeText(context, "Gagal mencetak: ${printResult.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
+                                }
                             }
                         },
-                        dismissButton = {
-                            TextButton(onClick = { showDeleteConfirmDialog = false }) {
-                                Text("Batal")
-                            }
-                        }
-                    )
-                }
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                    ) {
+                        Icon(imageVector = Icons.Default.Print, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Cetak Ulang Struk", fontWeight = FontWeight.Bold)
+                    }
 
-                OutlinedButton(
-                    onClick = { showDeleteConfirmDialog = true },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
-                    ),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error)
-                ) {
-                    Icon(imageVector = Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Hapus Transaksi", fontWeight = FontWeight.Bold)
+                    var showDeleteConfirmDialog by remember { mutableStateOf(false) }
+
+                    if (showDeleteConfirmDialog) {
+                        AlertDialog(
+                            onDismissRequest = { showDeleteConfirmDialog = false },
+                            title = { Text("Hapus Transaksi") },
+                            text = { Text("Apakah Anda yakin ingin menghapus transaksi TX#${detail.transaction.id}? Tindakan ini tidak dapat dibatalkan.") },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        showDeleteConfirmDialog = false
+                                        viewModel.deleteTransaction(detail.transaction.id) {
+                                            Toast.makeText(context, "Transaksi berhasil dihapus", Toast.LENGTH_SHORT).show()
+                                            onNavigateBack()
+                                        }
+                                    }
+                                ) {
+                                    Text("Hapus", color = MaterialTheme.colorScheme.error)
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showDeleteConfirmDialog = false }) {
+                                    Text("Batal")
+                                }
+                            }
+                        )
+                    }
+
+                    OutlinedButton(
+                        onClick = { showDeleteConfirmDialog = true },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        ),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error)
+                    ) {
+                        Icon(imageVector = Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Hapus Transaksi", fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         } ?: run {
