@@ -13,5 +13,6 @@ data class Transaction(
     @ColumnInfo(name = "kembalian") val kembalian: Long,
     @ColumnInfo(name = "metode_pembayaran") val metodePembayaran: String = "cash",
     @ColumnInfo(name = "nomor_meja") val nomorMeja: String? = null,
+    @ColumnInfo(name = "nama_kasir") val namaKasir: String? = null,
     @ColumnInfo(name = "created_at") val createdAt: Long = System.currentTimeMillis()
 )

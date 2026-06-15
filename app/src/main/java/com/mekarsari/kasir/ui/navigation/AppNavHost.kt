@@ -46,6 +46,9 @@ fun AppNavHost(
         Triple(Screen.Settings.route, "Settings", Icons.Default.Settings)
     )
 
+    val kasirViewModel: com.mekarsari.kasir.ui.kasir.KasirViewModel = viewModel(factory = factory)
+    val riwayatViewModel: com.mekarsari.kasir.ui.riwayat.RiwayatViewModel = viewModel(factory = factory)
+
     Scaffold(
         bottomBar = {
             val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -82,7 +85,7 @@ fun AppNavHost(
             modifier = modifier.padding(paddingValues)
         ) {
             composable(Screen.Kasir.route) {
-                KasirScreen(viewModel = viewModel(factory = factory))
+                KasirScreen(viewModel = kasirViewModel)
             }
             
             composable(Screen.Produk.route) {
@@ -113,7 +116,7 @@ fun AppNavHost(
 
             composable(Screen.Riwayat.route) {
                 RiwayatScreen(
-                    viewModel = viewModel(factory = factory),
+                    viewModel = riwayatViewModel,
                     onNavigateToDetail = { id ->
                         navController.navigate(Screen.RiwayatDetail.createRoute(id))
                     }
@@ -127,7 +130,9 @@ fun AppNavHost(
                 val id = backStackEntry.arguments?.getInt("transactionId") ?: 0
                 RiwayatDetailScreen(
                     transactionId = id,
-                    viewModel = viewModel(factory = factory),
+                    viewModel = riwayatViewModel,
+                    kasirViewModel = kasirViewModel,
+                    navController = navController,
                     onNavigateBack = { navController.popBackStack() }
                 )
             }

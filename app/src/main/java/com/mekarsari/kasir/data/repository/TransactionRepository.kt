@@ -18,6 +18,10 @@ class TransactionRepository(private val transactionDao: TransactionDao) {
         return transactionDao.insertTransactionWithItems(transaction, items)
     }
 
+    suspend fun updateTransactionWithItems(transaction: Transaction, items: List<TransactionItem>) {
+        transactionDao.updateTransactionWithItems(transaction, items)
+    }
+
     suspend fun deleteTransactionsByMonth(month: Int, year: Int): Int {
         val cal = java.util.Calendar.getInstance()
         // Start: 1st day of month at 00:00:00.000

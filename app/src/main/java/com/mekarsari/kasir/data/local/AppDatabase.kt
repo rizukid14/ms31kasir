@@ -17,7 +17,7 @@ import android.database.sqlite.SQLiteDatabase
 
 @Database(
     entities = [Product::class, Transaction::class, TransactionItem::class, SettingEntry::class],
-    version = 9,
+    version = 10,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

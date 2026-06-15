@@ -5,6 +5,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.background
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Print
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -38,6 +40,8 @@ import java.util.Locale
 fun RiwayatDetailScreen(
     transactionId: Int,
     viewModel: RiwayatViewModel,
+    kasirViewModel: com.mekarsari.kasir.ui.kasir.KasirViewModel,
+    navController: androidx.navigation.NavController,
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -226,9 +230,37 @@ fun RiwayatDetailScreen(
                             showReceiptNumber = rSettingsMap["show_receipt_number"]?.toBoolean() ?: true,
                             showTotalQty = rSettingsMap["show_total_qty"]?.toBoolean() ?: false,
                             showSignatureSection = rSettingsMap["show_signature_section"]?.toBoolean() ?: true,
-                            namaKasir = rSettingsMap["nama_kasir"] ?: "Kasir 1"
+                            namaKasir = transaction.namaKasir ?: rSettingsMap["nama_kasir"] ?: ""
                         )
                     }
+                }
+
+                var showDeleteConfirmDialog by remember { mutableStateOf(false) }
+
+                if (showDeleteConfirmDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showDeleteConfirmDialog = false },
+                        title = { Text("Hapus Transaksi") },
+                        text = { Text("Apakah Anda yakin ingin menghapus transaksi TX#${detail.transaction.id}? Tindakan ini tidak dapat dibatalkan.") },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    showDeleteConfirmDialog = false
+                                    viewModel.deleteTransaction(detail.transaction.id) {
+                                        Toast.makeText(context, "Transaksi berhasil dihapus", Toast.LENGTH_SHORT).show()
+                                        onNavigateBack()
+                                    }
+                                }
+                            ) {
+                                Text("Hapus", color = MaterialTheme.colorScheme.error)
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showDeleteConfirmDialog = false }) {
+                                Text("Batal")
+                            }
+                        }
+                    )
                 }
 
                 // Action buttons grouped closely together
@@ -236,6 +268,51 @@ fun RiwayatDetailScreen(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedButton(
+                            onClick = { showDeleteConfirmDialog = true },
+                            modifier = Modifier
+                                .weight(0.18f)
+                                .fillMaxHeight(),
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(0.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.error
+                            ),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.error)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Hapus Transaksi",
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+
+                        Button(
+                            onClick = {
+                                kasirViewModel.startEditingTransaction(detail)
+                                navController.navigate(com.mekarsari.kasir.ui.navigation.Screen.Kasir.route) {
+                                    popUpTo(com.mekarsari.kasir.ui.navigation.Screen.Kasir.route) {
+                                        inclusive = true
+                                    }
+                                }
+                            },
+                            modifier = Modifier
+                                .weight(0.82f)
+                                .fillMaxHeight(),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                        ) {
+                            Icon(imageVector = Icons.Default.Edit, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Edit Transaksi", fontWeight = FontWeight.Bold)
+                        }
+                    }
+
                     Button(
                         onClick = {
                             scope.launch {
@@ -267,7 +344,7 @@ fun RiwayatDetailScreen(
                                      showReceiptNumber = rSettings["show_receipt_number"]?.toBoolean() ?: true,
                                      showTotalQty = rSettings["show_total_qty"]?.toBoolean() ?: false,
                                      showSignatureSection = rSettings["show_signature_section"]?.toBoolean() ?: true,
-                                     namaKasir = rSettings["nama_kasir"] ?: "Kasir 1"
+                                     namaKasir = transaction.namaKasir ?: rSettings["nama_kasir"] ?: ""
                                  )
                                  val logoWidth = rSettings["logo_width_char"]?.toIntOrNull()?.let { if (it > 0) it else 12 } ?: 12
                                  val printResult = printerManager.printReceipt(macAddress, receiptStr, logoBitmap, logoWidth)
@@ -285,49 +362,6 @@ fun RiwayatDetailScreen(
                         Icon(imageVector = Icons.Default.Print, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("Cetak Ulang Struk", fontWeight = FontWeight.Bold)
-                    }
-
-                    var showDeleteConfirmDialog by remember { mutableStateOf(false) }
-
-                    if (showDeleteConfirmDialog) {
-                        AlertDialog(
-                            onDismissRequest = { showDeleteConfirmDialog = false },
-                            title = { Text("Hapus Transaksi") },
-                            text = { Text("Apakah Anda yakin ingin menghapus transaksi TX#${detail.transaction.id}? Tindakan ini tidak dapat dibatalkan.") },
-                            confirmButton = {
-                                TextButton(
-                                    onClick = {
-                                        showDeleteConfirmDialog = false
-                                        viewModel.deleteTransaction(detail.transaction.id) {
-                                            Toast.makeText(context, "Transaksi berhasil dihapus", Toast.LENGTH_SHORT).show()
-                                            onNavigateBack()
-                                        }
-                                    }
-                                ) {
-                                    Text("Hapus", color = MaterialTheme.colorScheme.error)
-                                }
-                            },
-                            dismissButton = {
-                                TextButton(onClick = { showDeleteConfirmDialog = false }) {
-                                    Text("Batal")
-                                }
-                            }
-                        )
-                    }
-
-                    OutlinedButton(
-                        onClick = { showDeleteConfirmDialog = true },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = MaterialTheme.colorScheme.error
-                        ),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error)
-                    ) {
-                        Icon(imageVector = Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Hapus Transaksi", fontWeight = FontWeight.Bold)
                     }
                 }
             }

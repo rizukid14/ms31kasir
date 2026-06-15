@@ -87,6 +87,8 @@ fun KasirScreen(
         }
     }
 
+    val editingTransactionId by viewModel.editingTransactionId.collectAsState()
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -98,6 +100,32 @@ fun KasirScreen(
                 .padding(bottom = if (cart.isNotEmpty()) 80.dp else 0.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            if (editingTransactionId != null) {
+                Surface(
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Mengedit Transaksi TX#$editingTransactionId",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                        TextButton(
+                            onClick = { viewModel.cancelEditing() }
+                        ) {
+                            Text("Batal", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+
             // Header: Search on top, GroupBy chips below
             Column(
                 modifier = Modifier.fillMaxWidth(),

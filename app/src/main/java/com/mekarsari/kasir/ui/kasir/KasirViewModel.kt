@@ -39,6 +39,53 @@ class KasirViewModel(
         _nomorMeja.value = nomor
     }
 
+    private val _editingTransactionId = MutableStateFlow<Int?>(null)
+    val editingTransactionId: StateFlow<Int?> = _editingTransactionId.asStateFlow()
+
+    private var editingTransactionCreatedAt: Long = 0L
+
+    fun startEditingTransaction(txWithItems: com.mekarsari.kasir.data.local.dao.TransactionWithItems) {
+        _editingTransactionId.value = txWithItems.transaction.id
+        editingTransactionCreatedAt = txWithItems.transaction.createdAt
+        
+        // Map Snapshot items to CartItems
+        val newCart = txWithItems.items.map { item ->
+            val matchedProduct = products.value.find { it.id == item.productId }
+                ?: Product(
+                    id = item.productId,
+                    nama = item.namaProdukSnapshot.replace(" (1/2 Porsi)", ""),
+                    harga = item.hargaSaatItu,
+                    stok = 999,
+                    kategori = ""
+                )
+            val isHalf = item.namaProdukSnapshot.contains("(1/2 Porsi)")
+            CartItem(
+                product = matchedProduct,
+                quantity = item.qty,
+                customHarga = item.hargaSaatItu,
+                isHalfPortion = isHalf
+            )
+        }
+        _cart.value = newCart
+        _nomorMeja.value = txWithItems.transaction.nomorMeja ?: ""
+        _payAmount.value = txWithItems.transaction.bayar
+    }
+
+    fun cancelEditing() {
+        _editingTransactionId.value = null
+        clearCart()
+        _nomorMeja.value = ""
+    }
+
+    fun deleteEditingTransaction(onSuccess: () -> Unit) {
+        val id = _editingTransactionId.value ?: return
+        viewModelScope.launch {
+            transactionRepository.deleteTransactionById(id)
+            cancelEditing()
+            onSuccess()
+        }
+    }
+
     private val calculateTotalUseCase = CalculateTotalUseCase()
     private val calculateChangeUseCase = CalculateChangeUseCase()
 
@@ -196,13 +243,10 @@ class KasirViewModel(
         }
 
         try {
-            val transaction = Transaction(
-                total = totalVal,
-                bayar = payVal,
-                kembalian = changeVal,
-                metodePembayaran = "cash",
-                nomorMeja = if (mesa.isBlank()) null else mesa
-            )
+            val editId = _editingTransactionId.value
+            // Read nama kasir at checkout time — this becomes the immutable snapshot
+            val namaKasirSnapshot = settingRepository.getSettingValue("nama_kasir")?.takeIf { it.isNotBlank() }
+
             val items = cartItems.map { item ->
                 val nameSnapshot = if (item.isHalfPortion) {
                     "${item.product.nama} (1/2 Porsi)"
@@ -210,7 +254,7 @@ class KasirViewModel(
                     item.product.nama
                 }
                 TransactionItem(
-                    transactionId = 0,
+                    transactionId = editId ?: 0,
                     productId = item.product.id,
                     namaProdukSnapshot = nameSnapshot,
                     hargaSaatItu = item.customHarga,
@@ -219,13 +263,36 @@ class KasirViewModel(
                 )
             }
 
-            // Save transaction in database
-            val transactionId = transactionRepository.insertTransactionWithItems(transaction, items).toInt()
+            val transactionId = if (editId != null) {
+                val transaction = Transaction(
+                    id = editId,
+                    total = totalVal,
+                    bayar = payVal,
+                    kembalian = changeVal,
+                    metodePembayaran = "cash",
+                    nomorMeja = if (mesa.isBlank()) null else mesa,
+                    namaKasir = namaKasirSnapshot,
+                    createdAt = editingTransactionCreatedAt
+                )
+                transactionRepository.updateTransactionWithItems(transaction, items)
+                editId
+            } else {
+                val transaction = Transaction(
+                    total = totalVal,
+                    bayar = payVal,
+                    kembalian = changeVal,
+                    metodePembayaran = "cash",
+                    nomorMeja = if (mesa.isBlank()) null else mesa,
+                    namaKasir = namaKasirSnapshot
+                )
+                transactionRepository.insertTransactionWithItems(transaction, items).toInt()
+            }
 
             // Note: We clear the cart AFTER retrieving the ID to allow subsequent receipt generation if needed.
             // But let's clear it here as it represents checkout completion.
             clearCart()
             _nomorMeja.value = ""
+            _editingTransactionId.value = null
 
             return Result.success(transactionId)
         } catch (e: Exception) {

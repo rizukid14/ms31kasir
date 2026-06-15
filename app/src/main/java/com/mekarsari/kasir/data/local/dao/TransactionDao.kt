@@ -22,6 +22,20 @@ interface TransactionDao {
     @Insert
     suspend fun insertTransactionItems(items: List<TransactionItem>)
 
+    @Update
+    suspend fun updateTransactionOnly(transaction: Transaction)
+
+    @Query("DELETE FROM transaction_items WHERE transaction_id = :transactionId")
+    suspend fun deleteTransactionItemsByTransactionId(transactionId: Int)
+
+    @androidx.room.Transaction
+    suspend fun updateTransactionWithItems(transaction: Transaction, items: List<TransactionItem>) {
+        updateTransactionOnly(transaction)
+        deleteTransactionItemsByTransactionId(transaction.id)
+        val itemsWithId = items.map { it.copy(transactionId = transaction.id) }
+        insertTransactionItems(itemsWithId)
+    }
+
     @androidx.room.Transaction
     suspend fun insertTransactionWithItems(transaction: Transaction, items: List<TransactionItem>): Long {
         val transactionId = insertTransactionOnly(transaction).toInt()
