@@ -1,16 +1,59 @@
 package com.mekarsari.kasir.ui.settings
 
+import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mekarsari.kasir.data.local.AppDatabase
+import com.mekarsari.kasir.data.local.DatabaseBackupManager
 import com.mekarsari.kasir.data.repository.SettingRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+sealed interface BackupRestoreStatus {
+    object Idle : BackupRestoreStatus
+    object Loading : BackupRestoreStatus
+    data class Success(val message: String) : BackupRestoreStatus
+    data class Error(val errorMsg: String) : BackupRestoreStatus
+}
+
 class SettingsViewModel(
-    private val settingRepository: SettingRepository
+    private val settingRepository: SettingRepository,
+    private val database: AppDatabase
 ) : ViewModel() {
+
+    private val _backupStatus = MutableStateFlow<BackupRestoreStatus>(BackupRestoreStatus.Idle)
+    val backupStatus: StateFlow<BackupRestoreStatus> = _backupStatus.asStateFlow()
+
+    fun resetBackupStatus() {
+        _backupStatus.value = BackupRestoreStatus.Idle
+    }
+
+    fun backupDatabase(context: Context, outputUri: Uri) {
+        _backupStatus.value = BackupRestoreStatus.Loading
+        viewModelScope.launch {
+            val result = DatabaseBackupManager.backupDatabase(context, outputUri, database)
+            if (result.isSuccess) {
+                _backupStatus.value = BackupRestoreStatus.Success("Backup database berhasil disimpan!")
+            } else {
+                _backupStatus.value = BackupRestoreStatus.Error(result.exceptionOrNull()?.message ?: "Gagal melakukan backup.")
+            }
+        }
+    }
+
+    fun restoreDatabase(context: Context, inputUri: Uri) {
+        _backupStatus.value = BackupRestoreStatus.Loading
+        viewModelScope.launch {
+            val result = DatabaseBackupManager.restoreDatabase(context, inputUri, database)
+            if (result.isSuccess) {
+                _backupStatus.value = BackupRestoreStatus.Success("Restore database berhasil! Aplikasi akan ditutup, silakan buka kembali.")
+            } else {
+                _backupStatus.value = BackupRestoreStatus.Error(result.exceptionOrNull()?.message ?: "Gagal melakukan restore.")
+            }
+        }
+    }
 
     private val _namaToko = MutableStateFlow("Mekar Sari")
     val namaToko: StateFlow<String> = _namaToko.asStateFlow()

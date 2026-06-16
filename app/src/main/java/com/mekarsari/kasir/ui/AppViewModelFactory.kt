@@ -14,7 +14,8 @@ import com.mekarsari.kasir.ui.laporan.LaporanViewModel
 class AppViewModelFactory(
     private val productRepository: ProductRepository,
     private val transactionRepository: TransactionRepository,
-    private val settingRepository: SettingRepository
+    private val settingRepository: SettingRepository,
+    private val database: com.mekarsari.kasir.data.local.AppDatabase
 ) : ViewModelProvider.Factory {
     
     @Suppress("UNCHECKED_CAST")
@@ -33,7 +34,7 @@ class AppViewModelFactory(
                 LaporanViewModel(transactionRepository, productRepository) as T
             }
             modelClass.isAssignableFrom(SettingsViewModel::class.java) -> {
-                SettingsViewModel(settingRepository) as T
+                SettingsViewModel(settingRepository, database) as T
             }
             else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
         }

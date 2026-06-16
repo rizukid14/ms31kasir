@@ -45,10 +45,11 @@ class BluetoothPrinterManager(private val context: Context) {
             return@withContext Result.failure(Exception("Bluetooth dinonaktifkan"))
         }
 
+        var connection: InsecureBluetoothConnection? = null
         var printer: EscPosPrinter? = null
         try {
             val device: BluetoothDevice = adapter.getRemoteDevice(macAddress)
-            val connection = InsecureBluetoothConnection(device)
+            connection = InsecureBluetoothConnection(device)
             
             // 203 DPI, 48mm width (approx 384 dots), 32 characters per line (typical 58mm printer)
             printer = EscPosPrinter(connection, 203, 48f, 32)
@@ -61,7 +62,8 @@ class BluetoothPrinterManager(private val context: Context) {
                     val hex = com.dantsu.escposprinter.textparser.PrinterTextParserImg.bitmapToHexadecimalString(printer, resized)
                     receiptContent.replace("[LOGO]", "[C]<img>$hex</img>\n")
                 } catch (imgEx: Exception) {
-                    receiptContent.replace("[LOGO]", "")
+                    val storeName = "RM. MEKAR SARI"
+                    receiptContent.replace("[LOGO]", "[C]<b>$storeName</b>\n")
                 }
             } else {
                 receiptContent.replace("[LOGO]", "")
@@ -76,6 +78,11 @@ class BluetoothPrinterManager(private val context: Context) {
         } finally {
             try {
                 printer?.disconnectPrinter()
+            } catch (ex: Exception) {
+                // Ignore
+            }
+            try {
+                connection?.disconnect()
             } catch (ex: Exception) {
                 // Ignore
             }

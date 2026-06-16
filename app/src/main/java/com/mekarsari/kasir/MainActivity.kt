@@ -51,7 +51,8 @@ class MainActivity : ComponentActivity() {
         val factory = AppViewModelFactory(
             productRepository = app.productRepository,
             transactionRepository = app.transactionRepository,
-            settingRepository = app.settingRepository
+            settingRepository = app.settingRepository,
+            database = app.database
         )
 
         // Instantiate settingsViewModel globally to read/write persistent theme config

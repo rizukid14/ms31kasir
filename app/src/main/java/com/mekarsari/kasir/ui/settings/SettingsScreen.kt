@@ -39,6 +39,16 @@ import androidx.compose.foundation.background
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.CloudUpload
+import androidx.compose.material.icons.filled.CloudDownload
+import androidx.compose.foundation.shape.RoundedCornerShape
 
 @Composable
 fun SettingsScreen(
@@ -197,6 +207,117 @@ fun SettingsScreen(
         }
     )
 
+    val backupStatus by viewModel.backupStatus.collectAsState()
+    var showRestoreConfirm by remember { mutableStateOf(false) }
+
+    val backupLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/octet-stream"),
+        onResult = { uri ->
+            if (uri != null) {
+                viewModel.backupDatabase(context, uri)
+            }
+        }
+    )
+
+    val restoreLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+        onResult = { uri ->
+            if (uri != null) {
+                viewModel.restoreDatabase(context, uri)
+            }
+        }
+    )
+
+    // Handling dialogs for backup / restore
+    when (val status = backupStatus) {
+        is BackupRestoreStatus.Loading -> {
+            AlertDialog(
+                onDismissRequest = {},
+                confirmButton = {},
+                title = { Text("Memproses Data") },
+                text = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        modifier = Modifier.padding(8.dp)
+                    ) {
+                        CircularProgressIndicator()
+                        Text("Harap tunggu sebentar...")
+                    }
+                }
+            )
+        }
+        is BackupRestoreStatus.Success -> {
+            AlertDialog(
+                onDismissRequest = {
+                    if (status.message.contains("Aplikasi akan ditutup")) {
+                        val activity = context as? android.app.Activity
+                        activity?.finishAffinity()
+                        System.exit(0)
+                    } else {
+                        viewModel.resetBackupStatus()
+                    }
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            if (status.message.contains("Aplikasi akan ditutup")) {
+                                val activity = context as? android.app.Activity
+                                activity?.finishAffinity()
+                                System.exit(0)
+                            } else {
+                                viewModel.resetBackupStatus()
+                            }
+                        }
+                    ) {
+                        Text("OK")
+                    }
+                },
+                title = { Text("Sukses") },
+                text = { Text(status.message) }
+            )
+        }
+        is BackupRestoreStatus.Error -> {
+            AlertDialog(
+                onDismissRequest = { viewModel.resetBackupStatus() },
+                confirmButton = {
+                    TextButton(onClick = { viewModel.resetBackupStatus() }) {
+                        Text("Tutup")
+                    }
+                },
+                title = { Text("Gagal") },
+                text = { Text(status.errorMsg) }
+            )
+        }
+        BackupRestoreStatus.Idle -> { /* Do nothing */ }
+    }
+
+    if (showRestoreConfirm) {
+        AlertDialog(
+            onDismissRequest = { showRestoreConfirm = false },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showRestoreConfirm = false
+                        restoreLauncher.launch(arrayOf("*/*"))
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Ya, Restore")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRestoreConfirm = false }) {
+                    Text("Batal")
+                }
+            },
+            title = { Text("Konfirmasi Restore Data") },
+            text = {
+                Text("Apakah Anda yakin ingin me-restore data?\n\nSemua transaksi saat ini akan DITIMPA dan DIHAPUS, lalu digantikan oleh data dari file backup. Aplikasi akan ditutup secara otomatis setelah proses berhasil.")
+            }
+        )
+    }
+
     val printerManager = remember { BluetoothPrinterManager(context) }
     var pairedDevices by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
     var hasPermission by remember {
@@ -309,68 +430,123 @@ fun SettingsScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            Text(
-                text = "Pengaturan Toko",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
-
-        item {
-            Row(
+            Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(bottom = 8.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
-                if (logoBitmap != null) {
-                    Image(
-                        bitmap = logoBitmap.asImageBitmap(),
-                        contentDescription = "Logo Toko",
-                        modifier = Modifier
-                            .size(72.dp)
-                            .background(Color.LightGray, shape = CircleShape)
-                    )
-                } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
                     Box(
                         modifier = Modifier
-                            .size(72.dp)
-                            .background(MaterialTheme.colorScheme.surfaceVariant, shape = CircleShape),
+                            .size(100.dp)
+                            .background(
+                                color = MaterialTheme.colorScheme.surface,
+                                shape = CircleShape
+                            )
+                            .border(
+                                width = 3.dp,
+                                color = MaterialTheme.colorScheme.primary,
+                                shape = CircleShape
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
+                        if (logoUri.isNotEmpty() && logoBitmap != null) {
+                            Image(
+                                bitmap = logoBitmap.asImageBitmap(),
+                                contentDescription = "Logo Toko",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(CircleShape)
+                            )
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(MaterialTheme.colorScheme.surfaceVariant, shape = CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = if (namaToko.length >= 2) namaToko.take(2).uppercase() else "MS",
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
                         Text(
-                            text = "LOGO",
-                            style = MaterialTheme.typography.labelSmall,
+                            text = if (namaToko.isNotEmpty()) namaToko else "RM. Mekar Sari",
+                            style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            textAlign = TextAlign.Center
+                        )
+                        Text(
+                            text = if (alamatToko.isNotEmpty()) alamatToko else "Alamat belum diatur",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
+                            textAlign = TextAlign.Center
                         )
                     }
-                }
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Button(
-                        onClick = { logoLauncher.launch("image/*") },
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Pilih Logo Toko", fontSize = 12.sp)
-                    }
-                    if (logoUri.isNotEmpty()) {
-                        TextButton(
-                            onClick = {
-                                viewModel.saveLogoUri("")
-                                try {
-                                    val localFile = java.io.File(context.filesDir, "shop_logo.png")
-                                    if (localFile.exists()) {
-                                        localFile.delete()
-                                    }
-                                } catch (e: Exception) {
-                                    e.printStackTrace()
-                                }
-                            },
-                            contentPadding = PaddingValues(0.dp)
+                        ElevatedButton(
+                            onClick = { logoLauncher.launch("image/*") },
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                            colors = ButtonDefaults.elevatedButtonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            )
                         ) {
-                            Text("Hapus Logo", color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
+                            Icon(imageVector = Icons.Default.CloudUpload, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Pilih Logo", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+                        
+                        if (logoUri.isNotEmpty()) {
+                            OutlinedButton(
+                                onClick = {
+                                    viewModel.saveLogoUri("")
+                                    try {
+                                        val localFile = java.io.File(context.filesDir, "shop_logo.png")
+                                        if (localFile.exists()) {
+                                            localFile.delete()
+                                        }
+                                    } catch (e: Exception) {
+                                        e.printStackTrace()
+                                    }
+                                },
+                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    contentColor = MaterialTheme.colorScheme.error
+                                )
+                            ) {
+                                Icon(imageVector = Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Hapus", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            }
                         }
                     }
                 }
@@ -841,6 +1017,71 @@ fun SettingsScreen(
                     Icon(imageVector = Icons.Default.Print, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Test Print Struk")
+                }
+            }
+        }
+
+        item {
+            Divider()
+        }
+
+        item {
+            Text(
+                text = "Manajemen Data (Backup & Restore)",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = "Cadangkan seluruh database transaksi dan pengaturan ke file eksternal (.db), atau pulihkan dari cadangan sebelumnya.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Button(
+                            onClick = {
+                                backupLauncher.launch("mekarsari_backup.db")
+                            },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.secondary
+                            )
+                        ) {
+                            Icon(imageVector = Icons.Default.CloudDownload, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Backup Data", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+
+                        Button(
+                            onClick = {
+                                showRestoreConfirm = true
+                            },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.error
+                            )
+                        ) {
+                            Icon(imageVector = Icons.Default.CloudUpload, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Restore Data", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
                 }
             }
         }
