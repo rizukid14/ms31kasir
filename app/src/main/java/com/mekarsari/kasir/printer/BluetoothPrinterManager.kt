@@ -31,7 +31,7 @@ class BluetoothPrinterManager(private val context: Context) {
                     
                     val isPrinterClass = if (bluetoothClass != null) {
                         bluetoothClass.hasService(android.bluetooth.BluetoothClass.Service.RENDER) ||
-                                bluetoothClass.deviceClass == android.bluetooth.BluetoothClass.Device.IMAGING_PRINTER ||
+                                bluetoothClass.deviceClass == 1664 || // 1664 = IMAGING_PRINTER
                                 bluetoothClass.majorDeviceClass == android.bluetooth.BluetoothClass.Device.Major.IMAGING
                     } else {
                         false
