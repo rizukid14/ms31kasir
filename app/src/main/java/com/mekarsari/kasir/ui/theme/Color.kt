@@ -24,9 +24,9 @@ val PurpleTertiary = Color(0xFFE1BEE7)
 
 // General Colors
 val DarkGray = Color(0xFF212121)
-val LightGray = Color(0xFFF5F5F5)
+val LightGray = Color(0xFFFCFBFA) // Premium Warm Cream Background
 val White = Color(0xFFFFFFFF)
 
 val SuccessGreen = Color(0xFF2E7D32)
 val ErrorRed = Color(0xFFC62828)
-val BorderGray = Color(0xFFE0E0E0)
+val BorderGray = Color(0xFFEBEBE5) // Soft warm border color

@@ -49,6 +49,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.foundation.shape.RoundedCornerShape
+import com.mekarsari.kasir.ui.theme.appTextFieldColors
 
 @Composable
 fun SettingsScreen(
@@ -434,11 +435,12 @@ fun SettingsScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 8.dp),
-                shape = RoundedCornerShape(16.dp),
+                shape = MaterialTheme.shapes.medium,
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
             ) {
                 Column(
                     modifier = Modifier
@@ -558,7 +560,8 @@ fun SettingsScreen(
                 value = namaToko,
                 onValueChange = { viewModel.saveNamaToko(it) },
                 label = { Text("Nama Toko") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = appTextFieldColors()
             )
         }
 
@@ -567,7 +570,8 @@ fun SettingsScreen(
                 value = alamatToko,
                 onValueChange = { viewModel.saveAlamatToko(it) },
                 label = { Text("Alamat Toko") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = appTextFieldColors()
             )
         }
 
@@ -576,7 +580,8 @@ fun SettingsScreen(
                 value = alamatToko2,
                 onValueChange = { viewModel.saveAlamatToko2(it) },
                 label = { Text("Header 2 (di bawah Alamat)") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = appTextFieldColors()
             )
         }
 
@@ -585,7 +590,8 @@ fun SettingsScreen(
                 value = namaKasir,
                 onValueChange = { viewModel.saveNamaKasir(it) },
                 label = { Text("Nama Kasir") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = appTextFieldColors()
             )
         }
 
@@ -603,7 +609,8 @@ fun SettingsScreen(
                 },
                 label = { Text("Pajak (%)") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = appTextFieldColors()
             )
         }
 
@@ -612,7 +619,8 @@ fun SettingsScreen(
                 value = receiptHeader,
                 onValueChange = { viewModel.saveReceiptHeader(it) },
                 label = { Text("Kalimat Header Struk (Kustom)") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = appTextFieldColors()
             )
         }
 
@@ -621,7 +629,8 @@ fun SettingsScreen(
                 value = receiptFooter1,
                 onValueChange = { viewModel.saveReceiptFooter1(it) },
                 label = { Text("Kalimat Footer Struk Baris 1") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = appTextFieldColors()
             )
         }
 
@@ -630,7 +639,8 @@ fun SettingsScreen(
                 value = receiptFooter2,
                 onValueChange = { viewModel.saveReceiptFooter2(it) },
                 label = { Text("Kalimat Footer Struk Baris 2") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = appTextFieldColors()
             )
         }
 
@@ -653,7 +663,8 @@ fun SettingsScreen(
                     label = { Text("Spasi Atas Struk (Baris)") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1f),
-                    singleLine = true
+                    singleLine = true,
+                    colors = appTextFieldColors()
                 )
                 OutlinedTextField(
                     value = spacingBottomText,
@@ -669,7 +680,8 @@ fun SettingsScreen(
                     label = { Text("Spasi Bawah Struk (Baris)") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1f),
-                    singleLine = true
+                    singleLine = true,
+                    colors = appTextFieldColors()
                 )
             }
         }
@@ -719,7 +731,8 @@ fun SettingsScreen(
                     label = { Text("Panjang logo (karakter)") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = true,
+                    colors = appTextFieldColors()
                 )
             }
         }
@@ -960,7 +973,7 @@ fun SettingsScreen(
                     val isSelected = mac == printerMac
                     Card(
                         colors = CardDefaults.cardColors(
-                            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
+                            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f) else MaterialTheme.colorScheme.surface
                         ),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -972,7 +985,11 @@ fun SettingsScreen(
                                     verifyingMacAddress = mac
                                 }
                             },
-                        border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                        shape = MaterialTheme.shapes.medium,
+                        border = BorderStroke(
+                            width = if (isSelected) 2.dp else 1.dp,
+                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                        )
                     ) {
                         Row(
                             modifier = Modifier
@@ -1037,8 +1054,9 @@ fun SettingsScreen(
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                shape = MaterialTheme.shapes.medium,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),

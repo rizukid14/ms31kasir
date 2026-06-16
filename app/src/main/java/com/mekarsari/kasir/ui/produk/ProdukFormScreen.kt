@@ -14,6 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import com.mekarsari.kasir.ui.theme.appTextFieldColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -84,7 +85,8 @@ fun ProdukFormScreen(
                 label = { Text("Nama Produk") },
                 isError = isNamaError,
                 supportingText = if (isNamaError) { { Text("Nama produk tidak boleh kosong") } } else null,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = appTextFieldColors()
             )
 
             OutlinedTextField(
@@ -98,14 +100,16 @@ fun ProdukFormScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 isError = isHargaError,
                 supportingText = if (isHargaError) { { Text("Harga produk wajib diisi dan harus lebih dari 0") } } else null,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = appTextFieldColors()
             )
 
             OutlinedTextField(
                 value = kategori,
                 onValueChange = { kategori = it },
                 label = { Text("Kategori (Opsional)") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = appTextFieldColors()
             )
 
             OutlinedTextField(
@@ -113,7 +117,8 @@ fun ProdukFormScreen(
                 onValueChange = { stokString = it },
                 label = { Text("Stok Produk") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = appTextFieldColors()
             )
 
             Spacer(modifier = Modifier.weight(1f))
@@ -138,7 +143,8 @@ fun ProdukFormScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
+                    .height(52.dp),
+                shape = MaterialTheme.shapes.small,
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
                 Icon(imageVector = Icons.Default.Check, contentDescription = null)

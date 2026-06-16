@@ -1,13 +1,24 @@
 package com.mekarsari.kasir.ui.theme
 
 import android.app.Activity
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
+
+// App-wide shape definitions for design consistency
+private val AppShapes = androidx.compose.material3.Shapes(
+    small = RoundedCornerShape(12.dp),      // TextFields and small inputs
+    medium = RoundedCornerShape(16.dp),     // Cards and containers
+    large = RoundedCornerShape(20.dp),      // Large components
+    extraLarge = RoundedCornerShape(24.dp)  // Dialogs, Bottom Sheets
+)
 
 enum class AppTheme {
     ORANGE, BLUE, GREEN, PURPLE
@@ -24,6 +35,8 @@ private val OrangeColorScheme = lightColorScheme(
     onTertiary = DarkGray,
     onBackground = DarkGray,
     onSurface = DarkGray,
+    outline = BorderGray,
+    outlineVariant = BorderGray
 )
 
 private val BlueColorScheme = lightColorScheme(
@@ -37,6 +50,8 @@ private val BlueColorScheme = lightColorScheme(
     onTertiary = DarkGray,
     onBackground = DarkGray,
     onSurface = DarkGray,
+    outline = BorderGray,
+    outlineVariant = BorderGray
 )
 
 private val GreenColorScheme = lightColorScheme(
@@ -50,6 +65,8 @@ private val GreenColorScheme = lightColorScheme(
     onTertiary = DarkGray,
     onBackground = DarkGray,
     onSurface = DarkGray,
+    outline = BorderGray,
+    outlineVariant = BorderGray
 )
 
 private val PurpleColorScheme = lightColorScheme(
@@ -63,6 +80,8 @@ private val PurpleColorScheme = lightColorScheme(
     onTertiary = DarkGray,
     onBackground = DarkGray,
     onSurface = DarkGray,
+    outline = BorderGray,
+    outlineVariant = BorderGray
 )
 
 @Composable
@@ -91,6 +110,19 @@ fun MekarSariKasirTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
+        shapes = AppShapes,
         content = content
     )
 }
+
+@Composable
+fun appTextFieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedContainerColor = MaterialTheme.colorScheme.surface,
+    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+    disabledContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
+    focusedBorderColor = MaterialTheme.colorScheme.primary,
+    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+    focusedLabelColor = MaterialTheme.colorScheme.primary,
+    unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+)
+

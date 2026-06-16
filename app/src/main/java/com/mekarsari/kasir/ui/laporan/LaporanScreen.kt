@@ -145,7 +145,8 @@ fun LaporanScreen(
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = borderStroke()
             ) {
                 Row(
                     modifier = Modifier
@@ -482,7 +483,7 @@ fun TopProductRow(
 @Composable
 private fun borderStroke() = androidx.compose.foundation.BorderStroke(
     width = 1.dp,
-    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+    color = MaterialTheme.colorScheme.outline
 )
 
 private fun formatQty(value: Double): String {

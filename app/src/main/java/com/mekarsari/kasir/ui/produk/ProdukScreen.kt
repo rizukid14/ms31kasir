@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import com.mekarsari.kasir.data.local.entity.Product
 import java.text.NumberFormat
 import java.util.Locale
+import com.mekarsari.kasir.ui.theme.appTextFieldColors
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -136,7 +137,8 @@ fun ProdukScreen(
                         placeholder = { Text("Cari produk...") },
                         leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null) },
                         modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
+                        singleLine = true,
+                        colors = appTextFieldColors()
                     )
 
                     Row(
@@ -211,7 +213,7 @@ fun ProdukScreen(
                                             .fillMaxWidth()
                                             .clickable { collapsedCategories[category] = !isCollapsed },
                                         color = MaterialTheme.colorScheme.secondaryContainer,
-                                        shape = RoundedCornerShape(4.dp)
+                                        shape = MaterialTheme.shapes.small
                                     ) {
                                         Row(
                                             modifier = Modifier
@@ -322,8 +324,8 @@ fun ProductDetailRow(
             .fillMaxWidth()
             .clickable { onEdit() },
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
     ) {
         Row(
             modifier = Modifier
@@ -399,8 +401,8 @@ fun ReorderProductRow(
             .fillMaxWidth()
             .padding(vertical = 1.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
     ) {
         Row(
             modifier = Modifier

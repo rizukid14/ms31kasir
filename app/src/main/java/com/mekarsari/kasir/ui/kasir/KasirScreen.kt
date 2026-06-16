@@ -40,6 +40,7 @@ import com.mekarsari.kasir.domain.model.CartItem
 import com.mekarsari.kasir.printer.BluetoothPrinterManager
 import com.mekarsari.kasir.printer.ReceiptFormatter
 import com.mekarsari.kasir.ui.theme.SuccessGreen
+import com.mekarsari.kasir.ui.theme.appTextFieldColors
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
@@ -106,7 +107,7 @@ fun KasirScreen(
             if (editingTransactionId != null) {
                 Surface(
                     color = MaterialTheme.colorScheme.errorContainer,
-                    shape = RoundedCornerShape(8.dp),
+                    shape = MaterialTheme.shapes.small,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
@@ -140,7 +141,8 @@ fun KasirScreen(
                     placeholder = { Text("Cari Menu...") },
                     leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null) },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = true,
+                    colors = appTextFieldColors()
                 )
 
                 Row(
@@ -201,7 +203,7 @@ fun KasirScreen(
                                         .fillMaxWidth()
                                         .clickable { collapsedCategories[category] = !isCollapsed },
                                     color = MaterialTheme.colorScheme.secondaryContainer,
-                                    shape = RoundedCornerShape(4.dp)
+                                    shape = MaterialTheme.shapes.small
                                 ) {
                                     Row(
                                         modifier = Modifier
@@ -323,10 +325,10 @@ fun CompactProductRow(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         border = BorderStroke(
-            width = if (quantity > 0) 2.dp else 0.5.dp,
-            color = if (quantity > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+            width = if (quantity > 0) 2.dp else 1.dp,
+            color = if (quantity > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
         )
     ) {
         Row(
@@ -443,7 +445,7 @@ fun CartItemRow(
                 onClick = onDecrement,
                 contentPadding = PaddingValues(0.dp),
                 modifier = Modifier.size(32.dp),
-                shape = RoundedCornerShape(8.dp)
+                shape = MaterialTheme.shapes.small
             ) {
                 Text("-", fontWeight = FontWeight.Bold)
             }
@@ -476,7 +478,7 @@ fun CartItemRow(
                 onClick = onIncrement,
                 contentPadding = PaddingValues(0.dp),
                 modifier = Modifier.size(32.dp),
-                shape = RoundedCornerShape(8.dp)
+                shape = MaterialTheme.shapes.small
             ) {
                 Text("+", fontWeight = FontWeight.Bold)
             }
@@ -497,7 +499,8 @@ fun CartItemRow(
                         onValueChange = { tempPriceText = it },
                         label = { Text("Harga Baru (Rupiah)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = appTextFieldColors()
                     )
                 }
             },
@@ -549,7 +552,8 @@ fun CartItemRow(
                         },
                         label = { Text("Jumlah Porsi (Desimal, contoh: 4.6)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = appTextFieldColors()
                     )
 
                     Spacer(modifier = Modifier.height(4.dp))
@@ -786,8 +790,8 @@ fun PaymentBottomSheet(
                             modifier = Modifier
                                 .weight(1f)
                                 .fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                         ) {
                             if (currentCart.isEmpty()) {
                                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -816,7 +820,8 @@ fun PaymentBottomSheet(
 
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                         ) {
                             Column(
                                 modifier = Modifier.padding(12.dp),
@@ -835,7 +840,7 @@ fun PaymentBottomSheet(
                                                 val isSelected = nomorMeja == tableNum
                                                 val containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface
                                                 val contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
-                                                val borderColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                                                val borderColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
 
                                                 Surface(
                                                     onClick = {
@@ -848,7 +853,7 @@ fun PaymentBottomSheet(
                                                     modifier = Modifier
                                                         .weight(1f)
                                                         .height(36.dp),
-                                                    shape = RoundedCornerShape(6.dp),
+                                                    shape = MaterialTheme.shapes.small,
                                                     color = containerColor,
                                                     contentColor = contentColor,
                                                     border = BorderStroke(1.dp, borderColor)
@@ -920,7 +925,8 @@ fun PaymentBottomSheet(
 
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f))
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                         ) {
                             Column(
                                 modifier = Modifier.padding(12.dp),
@@ -935,7 +941,8 @@ fun PaymentBottomSheet(
                                     label = { Text("Jumlah Tunai Diterima") },
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     modifier = Modifier.fillMaxWidth(),
-                                    singleLine = true
+                                    singleLine = true,
+                                    colors = appTextFieldColors()
                                 )
 
                                 Row(
