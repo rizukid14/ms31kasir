@@ -230,7 +230,7 @@ fun RiwayatDetailScreen(
                             showNomorMeja = rSettingsMap["show_nomor_meja"]?.toBoolean() ?: true,
                             showReceiptNumber = rSettingsMap["show_receipt_number"]?.toBoolean() ?: true,
                             showTotalQty = rSettingsMap["show_total_qty"]?.toBoolean() ?: false,
-                            showSignatureSection = rSettingsMap["show_signature_section"]?.toBoolean() ?: true,
+                            showSignatureSection = rSettingsMap["show_signature_section"]?.toBoolean() ?: false,
                             namaKasir = transaction.namaKasir ?: rSettingsMap["nama_kasir"] ?: ""
                         )
                     }
@@ -366,7 +366,7 @@ fun RiwayatDetailScreen(
                                          showNomorMeja = rSettings["show_nomor_meja"]?.toBoolean() ?: true,
                                          showReceiptNumber = rSettings["show_receipt_number"]?.toBoolean() ?: true,
                                          showTotalQty = rSettings["show_total_qty"]?.toBoolean() ?: false,
-                                         showSignatureSection = rSettings["show_signature_section"]?.toBoolean() ?: true,
+                                         showSignatureSection = rSettings["show_signature_section"]?.toBoolean() ?: false,
                                          namaKasir = transaction.namaKasir ?: rSettings["nama_kasir"] ?: ""
                                      )
                                      val logoWidth = rSettings["logo_width_char"]?.toIntOrNull()?.let { if (it > 0) it else 12 } ?: 12
@@ -418,7 +418,7 @@ fun RiwayatReceiptPreview(
     showNomorMeja: Boolean = true,
     showReceiptNumber: Boolean = true,
     showTotalQty: Boolean = false,
-    showSignatureSection: Boolean = true,
+    showSignatureSection: Boolean = false,
     namaKasir: String = ""
 ) {
     Box(

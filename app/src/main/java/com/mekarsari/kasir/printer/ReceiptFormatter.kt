@@ -24,7 +24,7 @@ class ReceiptFormatter {
         showNomorMeja: Boolean = true,
         showReceiptNumber: Boolean = true,
         showTotalQty: Boolean = false,
-        showSignatureSection: Boolean = true,
+        showSignatureSection: Boolean = false,
         namaKasir: String = ""
     ): String {
         val transaction = transactionWithItems.transaction

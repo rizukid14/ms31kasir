@@ -893,7 +893,7 @@ fun PaymentBottomSheet(
                             showNomorMeja = rSettingsMap["show_nomor_meja"]?.toBoolean() ?: true,
                             showReceiptNumber = rSettingsMap["show_receipt_number"]?.toBoolean() ?: true,
                             showTotalQty = rSettingsMap["show_total_qty"]?.toBoolean() ?: false,
-                            showSignatureSection = rSettingsMap["show_signature_section"]?.toBoolean() ?: true,
+                            showSignatureSection = rSettingsMap["show_signature_section"]?.toBoolean() ?: false,
                             namaKasir = rSettingsMap["nama_kasir"] ?: "Kasir 1"
                         )
 
@@ -1062,7 +1062,7 @@ fun PaymentBottomSheet(
                                         showNomorMeja = rSettingsMap["show_nomor_meja"]?.toBoolean() ?: true,
                                         showReceiptNumber = rSettingsMap["show_receipt_number"]?.toBoolean() ?: true,
                                         showTotalQty = rSettingsMap["show_total_qty"]?.toBoolean() ?: false,
-                                        showSignatureSection = rSettingsMap["show_signature_section"]?.toBoolean() ?: true,
+                                        showSignatureSection = rSettingsMap["show_signature_section"]?.toBoolean() ?: false,
                                         namaKasir = rSettingsMap["nama_kasir"] ?: "Kasir 1"
                                     )
                                     val logoWidth = rSettingsMap["logo_width_char"]?.toIntOrNull()?.let { if (it > 0) it else 12 } ?: 12
@@ -1119,7 +1119,7 @@ fun ReceiptPreview(
     showNomorMeja: Boolean = true,
     showReceiptNumber: Boolean = true,
     showTotalQty: Boolean = false,
-    showSignatureSection: Boolean = true,
+    showSignatureSection: Boolean = false,
     namaKasir: String = ""
 ) {
     Box(

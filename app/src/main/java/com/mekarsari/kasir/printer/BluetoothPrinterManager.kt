@@ -18,13 +18,35 @@ class BluetoothPrinterManager(private val context: Context) {
         BluetoothAdapter.getDefaultAdapter()
     }
 
-    // List of paired devices (MAC to Name)
+    // List of paired devices (MAC to Name) - filtered to show only printers
     @SuppressLint("MissingPermission")
     fun getPairedDevices(): List<Pair<String, String>> {
         val adapter = bluetoothAdapter ?: return emptyList()
         if (!adapter.isEnabled) return emptyList()
         return try {
-            adapter.bondedDevices.map { it.address to (it.name ?: "Device Tidak Dikenal") }
+            adapter.bondedDevices
+                .filter { device ->
+                    val name = device.name ?: ""
+                    val bluetoothClass = device.bluetoothClass
+                    
+                    val isPrinterClass = if (bluetoothClass != null) {
+                        bluetoothClass.hasService(android.bluetooth.BluetoothClass.Service.RENDER) ||
+                                bluetoothClass.deviceClass == android.bluetooth.BluetoothClass.Device.IMAGING_PRINTER ||
+                                bluetoothClass.majorDeviceClass == android.bluetooth.BluetoothClass.Device.Major.IMAGING
+                    } else {
+                        false
+                    }
+                    
+                    val isPrinterByName = name.contains("print", ignoreCase = true) ||
+                            name.contains("thermal", ignoreCase = true) ||
+                            name.contains("pos", ignoreCase = true) ||
+                            name.contains("mpt", ignoreCase = true) ||
+                            name.contains("rt-", ignoreCase = true) ||
+                            name.contains("rpp", ignoreCase = true)
+                            
+                    isPrinterClass || isPrinterByName
+                }
+                .map { it.address to (it.name ?: "Device Tidak Dikenal") }
         } catch (e: SecurityException) {
             emptyList()
         }

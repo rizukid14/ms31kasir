@@ -79,7 +79,7 @@ abstract class AppDatabase : RoomDatabase() {
                 insertSettingIfNotExists(db, "show_nomor_meja", "true")
                 insertSettingIfNotExists(db, "show_receipt_number", "true")
                 insertSettingIfNotExists(db, "show_total_qty", "false")
-                insertSettingIfNotExists(db, "show_signature_section", "true")
+                insertSettingIfNotExists(db, "show_signature_section", "false")
 
                 // Seed produk hanya jika tabel produk masih kosong
                 val cursor = db.query("SELECT COUNT(*) FROM products")
