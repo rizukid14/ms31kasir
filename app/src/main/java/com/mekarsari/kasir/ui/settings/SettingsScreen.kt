@@ -452,12 +452,12 @@ fun SettingsScreen(
                             .size(100.dp)
                             .background(
                                 color = MaterialTheme.colorScheme.surface,
-                                shape = CircleShape
+                                shape = RoundedCornerShape(16.dp)
                             )
                             .border(
                                 width = 3.dp,
                                 color = MaterialTheme.colorScheme.primary,
-                                shape = CircleShape
+                                shape = RoundedCornerShape(16.dp)
                             ),
                         contentAlignment = Alignment.Center
                     ) {
@@ -468,13 +468,13 @@ fun SettingsScreen(
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .clip(CircleShape)
+                                    .clip(RoundedCornerShape(16.dp))
                             )
                         } else {
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .background(MaterialTheme.colorScheme.surfaceVariant, shape = CircleShape),
+                                    .background(MaterialTheme.colorScheme.surfaceVariant, shape = RoundedCornerShape(16.dp)),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
