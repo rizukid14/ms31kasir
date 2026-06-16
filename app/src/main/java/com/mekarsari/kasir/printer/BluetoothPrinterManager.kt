@@ -108,6 +108,8 @@ class BluetoothPrinterManager(private val context: Context) {
             }
 
             printer.printFormattedTextAndCut(contentToPrint)
+            // Berikan waktu 1 detik agar buffer Bluetooth terkirim sepenuhnya ke printer sebelum socket ditutup
+            kotlinx.coroutines.delay(1000)
             Result.success(Unit)
         } catch (e: SecurityException) {
             Result.failure(Exception("Izin Bluetooth ditolak. Pastikan izin Bluetooth Connect diberikan."))
