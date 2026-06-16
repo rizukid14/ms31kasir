@@ -461,7 +461,7 @@ fun SettingsScreen(
                             ),
                         contentAlignment = Alignment.Center
                     ) {
-                        if (logoUri.isNotEmpty() && logoBitmap != null) {
+                        if (logoBitmap != null) {
                             Image(
                                 bitmap = logoBitmap.asImageBitmap(),
                                 contentDescription = "Logo Toko",
