@@ -39,6 +39,7 @@ fun ProdukScreen(
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategoryFilter by remember { mutableStateOf("Semua") }
     var sortByAZ by remember { mutableStateOf(false) }
+    val collapsedCategories = remember { mutableStateMapOf<String, Boolean>() }
 
     val categories = remember(products) {
         listOf("Semua") + products.mapNotNull { it.kategori }.distinct().sorted()
@@ -202,31 +203,49 @@ fun ProdukScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         groupedProducts.forEach { (category, productList) ->
+                            val isCollapsed = collapsedCategories[category] ?: false
                             if (category.isNotEmpty()) {
                                 stickyHeader {
                                     Surface(
-                                        modifier = Modifier.fillMaxWidth(),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable { collapsedCategories[category] = !isCollapsed },
                                         color = MaterialTheme.colorScheme.secondaryContainer,
                                         shape = RoundedCornerShape(4.dp)
                                     ) {
-                                        Text(
-                                            text = category.uppercase(),
-                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                            style = MaterialTheme.typography.labelMedium,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onSecondaryContainer
-                                        )
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(horizontal = 12.dp, vertical = 6.dp),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = category.uppercase(),
+                                                style = MaterialTheme.typography.labelMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                                            )
+                                            Icon(
+                                                imageVector = if (isCollapsed) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowUp,
+                                                contentDescription = if (isCollapsed) "Buka" else "Tutup",
+                                                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        }
                                     }
                                 }
                             }
 
-                            items(productList, key = { it.id }) { product ->
-                                ProductDetailRow(
-                                    product = product,
-                                    onEdit = { onNavigateToForm(product.id) },
-                                    onDelete = { viewModel.deleteProduct(product) },
-                                    modifier = Modifier.animateItemPlacement()
-                                )
+                            if (!isCollapsed) {
+                                items(productList, key = { it.id }) { product ->
+                                    ProductDetailRow(
+                                        product = product,
+                                        onEdit = { onNavigateToForm(product.id) },
+                                        onDelete = { viewModel.deleteProduct(product) },
+                                        modifier = Modifier.animateItemPlacement()
+                                    )
+                                }
                             }
                         }
                     }

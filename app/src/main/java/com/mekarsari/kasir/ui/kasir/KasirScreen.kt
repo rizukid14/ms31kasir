@@ -20,6 +20,8 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -64,6 +66,7 @@ fun KasirScreen(
 
     val currentGroupSortOption by viewModel.groupSortOption.collectAsState()
     var showPaymentSheet by remember { mutableStateOf(false) }
+    val collapsedCategories = remember { mutableStateMapOf<String, Boolean>() }
 
     val customProductOrder by viewModel.customProductOrder.collectAsState()
 
@@ -190,32 +193,50 @@ fun KasirScreen(
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     groupedProducts.forEach { (category, productList) ->
+                        val isCollapsed = collapsedCategories[category] ?: false
                         if (currentGroupSortOption == KasirViewModel.GroupSortOption.DEFAULT && category.isNotEmpty()) {
                             stickyHeader {
                                 Surface(
-                                    modifier = Modifier.fillMaxWidth(),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { collapsedCategories[category] = !isCollapsed },
                                     color = MaterialTheme.colorScheme.secondaryContainer,
                                     shape = RoundedCornerShape(4.dp)
                                 ) {
-                                    Text(
-                                        text = category.uppercase(),
-                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                        style = MaterialTheme.typography.labelMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                                    )
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = category.uppercase(),
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                                        )
+                                        Icon(
+                                            imageVector = if (isCollapsed) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowUp,
+                                            contentDescription = if (isCollapsed) "Buka" else "Tutup",
+                                            tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
                                 }
                             }
                         }
 
-                        items(productList, key = { it.id }) { product ->
-                             val qty = cart.filter { it.product.id == product.id }.sumOf { it.quantity }
-                             CompactProductRow(
-                                product = product,
-                                quantity = qty,
-                                showCategoryLabel = currentGroupSortOption != KasirViewModel.GroupSortOption.DEFAULT,
-                                onClick = { viewModel.addToCart(product) }
-                             )
+                        if (currentGroupSortOption != KasirViewModel.GroupSortOption.DEFAULT || !isCollapsed) {
+                            items(productList, key = { it.id }) { product ->
+                                 val qty = cart.filter { it.product.id == product.id }.sumOf { it.quantity }
+                                 CompactProductRow(
+                                    product = product,
+                                    quantity = qty,
+                                    showCategoryLabel = currentGroupSortOption != KasirViewModel.GroupSortOption.DEFAULT,
+                                    onClick = { viewModel.addToCart(product) }
+                                 )
+                            }
                         }
                     }
                 }
