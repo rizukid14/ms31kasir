@@ -29,22 +29,38 @@ class BluetoothPrinterManager(private val context: Context) {
                     val name = device.name ?: ""
                     val bluetoothClass = device.bluetoothClass
                     
-                    val isPrinterClass = if (bluetoothClass != null) {
-                        bluetoothClass.hasService(android.bluetooth.BluetoothClass.Service.RENDER) ||
-                                bluetoothClass.deviceClass == 1664 || // 1664 = IMAGING_PRINTER
-                                bluetoothClass.majorDeviceClass == android.bluetooth.BluetoothClass.Device.Major.IMAGING
-                    } else {
-                        false
-                    }
-                    
                     val isPrinterByName = name.contains("print", ignoreCase = true) ||
                             name.contains("thermal", ignoreCase = true) ||
                             name.contains("pos", ignoreCase = true) ||
                             name.contains("mpt", ignoreCase = true) ||
                             name.contains("rt-", ignoreCase = true) ||
-                            name.contains("rpp", ignoreCase = true)
+                            name.contains("rpp", ignoreCase = true) ||
+                            name.contains("58mm", ignoreCase = true) ||
+                            name.contains("80mm", ignoreCase = true)
                             
-                    isPrinterClass || isPrinterByName
+                    val isPrinter = if (bluetoothClass != null) {
+                        val major = bluetoothClass.majorDeviceClass
+                        val isExcluded = major == android.bluetooth.BluetoothClass.Device.Major.PHONE ||
+                                major == android.bluetooth.BluetoothClass.Device.Major.AUDIO_VIDEO ||
+                                major == android.bluetooth.BluetoothClass.Device.Major.COMPUTER ||
+                                major == android.bluetooth.BluetoothClass.Device.Major.WEARABLE ||
+                                major == android.bluetooth.BluetoothClass.Device.Major.TOY ||
+                                major == android.bluetooth.BluetoothClass.Device.Major.HEALTH ||
+                                major == android.bluetooth.BluetoothClass.Device.Major.NETWORKING
+                                
+                        if (isExcluded) {
+                            isPrinterByName
+                        } else {
+                            bluetoothClass.deviceClass == 1664 || // 1664 = IMAGING_PRINTER
+                            major == android.bluetooth.BluetoothClass.Device.Major.IMAGING ||
+                            bluetoothClass.hasService(android.bluetooth.BluetoothClass.Service.RENDER) ||
+                            isPrinterByName
+                        }
+                    } else {
+                        isPrinterByName
+                    }
+                    
+                    isPrinter
                 }
                 .map { it.address to (it.name ?: "Device Tidak Dikenal") }
         } catch (e: SecurityException) {
