@@ -57,4 +57,7 @@ interface TransactionDao {
 
     @Query("DELETE FROM transactions WHERE id = :id")
     suspend fun deleteTransactionById(id: Int)
+
+    @Query("SELECT product_id FROM transaction_items GROUP BY product_id ORDER BY SUM(qty) DESC")
+    fun getMostOrderedProductIds(): Flow<List<Int>>
 }

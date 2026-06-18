@@ -40,4 +40,8 @@ class TransactionRepository(private val transactionDao: TransactionDao) {
     suspend fun deleteTransactionById(id: Int) {
         transactionDao.deleteTransactionById(id)
     }
+
+    fun getMostOrderedProductIds(): Flow<List<Int>> {
+        return transactionDao.getMostOrderedProductIds()
+    }
 }

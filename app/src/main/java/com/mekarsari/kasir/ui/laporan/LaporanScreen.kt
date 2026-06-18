@@ -28,6 +28,8 @@ import androidx.compose.ui.unit.sp
 import java.text.NumberFormat
 import java.util.Calendar
 import java.util.Locale
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -98,7 +100,7 @@ fun LaporanScreen(
                             ) {
                                 Text("Total Omzet", style = MaterialTheme.typography.bodySmall)
                                 Text(
-                                    formatRupiah(reportState.totalRevenue),
+                                    com.mekarsari.kasir.util.CurrencyUtil.formatRupiah(reportState.totalRevenue),
                                     fontWeight = FontWeight.Bold,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.error
@@ -198,6 +200,110 @@ fun LaporanScreen(
             }
         }
 
+        // Today's Summary Card
+        item {
+            val todayReportState by viewModel.todayReportState.collectAsState()
+            val settingsMap by viewModel.settingsMap.collectAsState()
+            val printerMac = settingsMap["printer_mac"] ?: ""
+            val namaKasir = settingsMap["nama_kasir"] ?: "Kasir 1"
+            val context = LocalContext.current
+            val scope = rememberCoroutineScope()
+            val printerManager = remember { com.mekarsari.kasir.printer.BluetoothPrinterManager(context) }
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.15f)),
+                border = borderStroke()
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Ringkasan Hari Ini (Penutupan)",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer
+                        )
+                        if (printerMac.isNotEmpty() && todayReportState.totalTransactions > 0) {
+                            Button(
+                                onClick = {
+                                    scope.launch {
+                                        val dateFormat = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+                                        val dateStr = dateFormat.format(java.util.Date())
+                                        val shopName = settingsMap["nama_toko"] ?: "RM. Mekar Sari"
+                                        val shopAddress = settingsMap["alamat_toko"] ?: ""
+                                        val shopAddress2 = settingsMap["alamat_toko2"] ?: ""
+
+                                        val formatter = com.mekarsari.kasir.printer.ReceiptFormatter()
+                                        val content = formatter.formatDailyClosing(
+                                            shopName = shopName,
+                                            shopAddress = shopAddress,
+                                            shopAddress2 = shopAddress2,
+                                            dateStr = dateStr,
+                                            revenue = todayReportState.totalRevenue,
+                                            transactionCount = todayReportState.totalTransactions,
+                                            averageTicket = todayReportState.averageTicket,
+                                            topProducts = todayReportState.topProducts,
+                                            namaKasir = namaKasir
+                                        )
+                                        val printResult = printerManager.printReceipt(printerMac, content)
+                                        if (printResult.isSuccess) {
+                                            android.widget.Toast.makeText(context, "Laporan penutupan dicetak!", android.widget.Toast.LENGTH_SHORT).show()
+                                        } else {
+                                            android.widget.Toast.makeText(context, "Gagal mencetak: ${printResult.exceptionOrNull()?.message}", android.widget.Toast.LENGTH_LONG).show()
+                                        }
+                                    }
+                                },
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
+                            ) {
+                                Text("Cetak Slip", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Omset Hari Ini", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                            Text(
+                                text = com.mekarsari.kasir.util.CurrencyUtil.formatRupiah(todayReportState.totalRevenue),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Transaksi", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                            Text(
+                                text = "${todayReportState.totalTransactions} Kali",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.secondary
+                            )
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Rata-rata", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                            Text(
+                                text = com.mekarsari.kasir.util.CurrencyUtil.formatRupiah(todayReportState.averageTicket),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.tertiary
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         // KPI Summary Dashboard Cards
         item {
             Row(
@@ -206,7 +312,7 @@ fun LaporanScreen(
             ) {
                 KpiCard(
                     title = "Pendapatan",
-                    value = formatRupiah(reportState.totalRevenue),
+                    value = com.mekarsari.kasir.util.CurrencyUtil.formatRupiah(reportState.totalRevenue),
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.weight(1f)
                 )
@@ -218,7 +324,7 @@ fun LaporanScreen(
                 )
                 KpiCard(
                     title = "Rata-rata",
-                    value = formatRupiah(reportState.averageTicket),
+                    value = com.mekarsari.kasir.util.CurrencyUtil.formatRupiah(reportState.averageTicket),
                     color = MaterialTheme.colorScheme.tertiary,
                     modifier = Modifier.weight(1f)
                 )
@@ -491,12 +597,6 @@ private fun formatQty(value: Double): String {
     } else {
         value.toString()
     }
-}
-
-private fun formatRupiah(value: Long): String {
-    val format = NumberFormat.getCurrencyInstance(Locale("in", "ID"))
-    format.maximumFractionDigits = 0
-    return format.format(value).replace("Rp", "Rp ")
 }
 
 private fun formatShortRupiah(value: Long): String {

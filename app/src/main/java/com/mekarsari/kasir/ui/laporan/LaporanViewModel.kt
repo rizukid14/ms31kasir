@@ -25,7 +25,8 @@ data class MonthlyReportState(
 
 class LaporanViewModel(
     private val transactionRepository: TransactionRepository,
-    private val productRepository: ProductRepository
+    private val productRepository: ProductRepository,
+    private val settingRepository: SettingRepository
 ) : ViewModel() {
 
     private val _selectedMonth = MutableStateFlow(Calendar.getInstance().get(Calendar.MONTH))
@@ -121,6 +122,75 @@ class LaporanViewModel(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = MonthlyReportState()
     )
+
+    val todayReportState: StateFlow<MonthlyReportState> = combine(
+        transactionRepository.allTransactionsWithItems,
+        productRepository.allProducts
+    ) { transactions, products ->
+        val txCalendar = Calendar.getInstance()
+        val todayCalendar = Calendar.getInstance()
+        
+        // Filter transactions created today (same year, month, and day)
+        val filtered = transactions.filter { tx ->
+            txCalendar.timeInMillis = tx.transaction.createdAt
+            txCalendar.get(Calendar.YEAR) == todayCalendar.get(Calendar.YEAR) &&
+                    txCalendar.get(Calendar.MONTH) == todayCalendar.get(Calendar.MONTH) &&
+                    txCalendar.get(Calendar.DAY_OF_MONTH) == todayCalendar.get(Calendar.DAY_OF_MONTH)
+        }
+
+        val totalRevenue = filtered.sumOf { it.transaction.total }
+        val totalTxCount = filtered.size
+        val avgTicket = if (totalTxCount > 0) totalRevenue / totalTxCount else 0L
+
+        val productCategoryMap = products.associate { it.nama to (it.kategori ?: "Makanan") }
+        val productQuantities = mutableMapOf<String, Double>()
+        val productUnits = mutableMapOf<String, String>()
+
+        filtered.forEach { tx ->
+            tx.items.forEach { item ->
+                val name = item.namaProdukSnapshot
+                val (baseName, multiplier) = if (name.endsWith(" (1/2 Porsi)")) {
+                    name.removeSuffix(" (1/2 Porsi)") to 0.5
+                } else {
+                    name to 1.0
+                }
+                val qtyToAdd = item.qty * multiplier
+                productQuantities[baseName] = (productQuantities[baseName] ?: 0.0) + qtyToAdd
+
+                val category = productCategoryMap[baseName] ?: "Makanan"
+                val unit = if (category.equals("Minuman", ignoreCase = true)) "Gelas" else "Porsi"
+                productUnits[baseName] = unit
+            }
+        }
+        
+        val topProducts = productQuantities.toList()
+            .sortedByDescending { it.second }
+            .take(5)
+            .map { (baseName, qty) ->
+                TopProductReport(
+                    name = baseName,
+                    qty = qty,
+                    unit = productUnits[baseName] ?: "Porsi"
+                )
+            }
+
+        MonthlyReportState(
+            totalRevenue = totalRevenue,
+            totalTransactions = totalTxCount,
+            averageTicket = avgTicket,
+            topProducts = topProducts,
+            dailySales = emptyMap(),
+            maxDays = 1
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = MonthlyReportState()
+    )
+
+    val settingsMap: StateFlow<Map<String, String>> = settingRepository.allSettings
+        .map { list -> list.associate { it.key to it.value } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
     fun nextMonth() {
         val currentMonth = _selectedMonth.value

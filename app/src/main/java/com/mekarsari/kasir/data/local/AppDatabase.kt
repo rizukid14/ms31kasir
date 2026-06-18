@@ -17,7 +17,7 @@ import android.database.sqlite.SQLiteDatabase
 
 @Database(
     entities = [Product::class, Transaction::class, TransactionItem::class, SettingEntry::class],
-    version = 11,
+    version = 12,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -30,6 +30,15 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
+        val MIGRATION_11_12 = object : androidx.room.migration.Migration(11, 12) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("CREATE TABLE IF NOT EXISTS `products_new` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `nama` TEXT NOT NULL, `harga` INTEGER NOT NULL, `kategori` TEXT)")
+                database.execSQL("INSERT INTO `products_new` (`id`, `nama`, `harga`, `kategori`) SELECT `id`, `nama`, `harga`, `kategori` FROM `products`")
+                database.execSQL("DROP TABLE `products`")
+                database.execSQL("ALTER TABLE `products_new` RENAME TO `products`")
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -37,6 +46,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "mekarsari_kasir_db"
                 )
+                    .addMigrations(MIGRATION_11_12)
                     .fallbackToDestructiveMigration()
                     .addCallback(AppDatabaseCallback())
                     .build()
@@ -165,7 +175,6 @@ abstract class AppDatabase : RoomDatabase() {
             val values = ContentValues().apply {
                 put("nama", nama)
                 put("harga", harga)
-                put("stok", stok)
                 put("kategori", kategori)
             }
             db.insert("products", SQLiteDatabase.CONFLICT_REPLACE, values)

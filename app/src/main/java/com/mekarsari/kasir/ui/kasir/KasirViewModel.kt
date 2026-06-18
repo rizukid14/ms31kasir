@@ -22,7 +22,8 @@ class KasirViewModel(
 
     enum class GroupSortOption {
         DEFAULT,
-        ALPHABETICAL
+        ALPHABETICAL,
+        TERLARIS
     }
 
     private val _groupSortOption = MutableStateFlow(GroupSortOption.DEFAULT)
@@ -66,7 +67,6 @@ class KasirViewModel(
                     id = item.productId,
                     nama = cleanedName,
                     harga = item.hargaSaatItu,
-                    stok = 999,
                     kategori = ""
                 )
             CartItem(
@@ -124,6 +124,13 @@ class KasirViewModel(
             if (orderStr.isEmpty()) emptyList() else orderStr.split(",").mapNotNull { it.toIntOrNull() }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val popularProductIds: StateFlow<List<Int>> = transactionRepository.getMostOrderedProductIds()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val settingsMap: StateFlow<Map<String, String>> = settingRepository.allSettings
+        .map { list -> list.associate { it.key to it.value } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
     private val _cart = MutableStateFlow<List<CartItem>>(emptyList())
     val cart: StateFlow<List<CartItem>> = _cart.asStateFlow()

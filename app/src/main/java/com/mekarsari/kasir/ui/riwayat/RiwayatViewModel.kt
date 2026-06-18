@@ -23,6 +23,10 @@ class RiwayatViewModel(
     private val _selectedTransaction = MutableStateFlow<TransactionWithItems?>(null)
     val selectedTransaction: StateFlow<TransactionWithItems?> = _selectedTransaction.asStateFlow()
 
+    val settingsMap: StateFlow<Map<String, String>> = settingRepository.allSettings
+        .map { list -> list.associate { it.key to it.value } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+
     fun selectTransaction(id: Int) {
         viewModelScope.launch {
             val tx = transactionRepository.getTransactionWithItemsById(id)

@@ -21,6 +21,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.mekarsari.kasir.ui.AppViewModelFactory
+import com.mekarsari.kasir.ui.splash.SplashScreen
 import com.mekarsari.kasir.ui.kasir.KasirScreen
 import com.mekarsari.kasir.ui.produk.ProdukFormScreen
 import com.mekarsari.kasir.ui.produk.ProdukScreen
@@ -81,9 +82,13 @@ fun AppNavHost(
     ) { paddingValues ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Kasir.route,
+            startDestination = Screen.Splash.route,
             modifier = modifier.padding(paddingValues)
         ) {
+            composable(Screen.Splash.route) {
+                SplashScreen(navController = navController)
+            }
+
             composable(Screen.Kasir.route) {
                 KasirScreen(viewModel = kasirViewModel)
             }

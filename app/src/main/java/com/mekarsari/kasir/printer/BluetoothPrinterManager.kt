@@ -92,22 +92,51 @@ class BluetoothPrinterManager(private val context: Context) {
             // 203 DPI, 48mm width (approx 384 dots), 32 characters per line (typical 58mm printer)
             printer = EscPosPrinter(connection, 203, 48f, 32)
             
-            val contentToPrint = if (logoBitmap != null && receiptContent.contains("[LOGO]")) {
+            var contentToPrint = receiptContent
+            if (logoBitmap != null && receiptContent.contains("[LOGO]")) {
                 try {
                     // Resize based on the character width setting (approx 12 dots per character)
                     val pixelSize = (logoWidthChar * 12).coerceIn(48, 384)
                     val resized = Bitmap.createScaledBitmap(logoBitmap, pixelSize, pixelSize, true)
                     val hex = com.dantsu.escposprinter.textparser.PrinterTextParserImg.bitmapToHexadecimalString(printer, resized)
-                    receiptContent.replace("[LOGO]", "[C]<img>$hex</img>\n")
+                    contentToPrint = receiptContent.replace("[LOGO]", "[C]<img>$hex</img>\n")
                 } catch (imgEx: Exception) {
                     val storeName = "RM. MEKAR SARI"
-                    receiptContent.replace("[LOGO]", "[C]<b>$storeName</b>\n")
+                    contentToPrint = receiptContent.replace("[LOGO]", "[C]<b>$storeName</b>\n")
                 }
             } else {
-                receiptContent.replace("[LOGO]", "")
+                contentToPrint = receiptContent.replace("[LOGO]", "")
             }
 
-            printer.printFormattedTextAndCut(contentToPrint)
+            try {
+                printer.printFormattedTextAndCut(contentToPrint)
+            } catch (ex: Exception) {
+                // Retry with standard BluetoothConnection (secure RFCOMM)
+                try {
+                    connection.disconnect()
+                } catch (dEx: Exception) {}
+
+                val secureConnection = com.dantsu.escposprinter.connection.bluetooth.BluetoothConnection(device)
+                connection = secureConnection
+                val fallbackPrinter = EscPosPrinter(secureConnection, 203, 48f, 32)
+                printer = fallbackPrinter
+
+                val finalContent = if (logoBitmap != null && receiptContent.contains("[LOGO]")) {
+                    try {
+                        val pixelSize = (logoWidthChar * 12).coerceIn(48, 384)
+                        val resized = Bitmap.createScaledBitmap(logoBitmap, pixelSize, pixelSize, true)
+                        val hex = com.dantsu.escposprinter.textparser.PrinterTextParserImg.bitmapToHexadecimalString(fallbackPrinter, resized)
+                        receiptContent.replace("[LOGO]", "[C]<img>$hex</img>\n")
+                    } catch (imgEx: Exception) {
+                        val storeName = "RM. MEKAR SARI"
+                        receiptContent.replace("[LOGO]", "[C]<b>$storeName</b>\n")
+                    }
+                } else {
+                    receiptContent.replace("[LOGO]", "")
+                }
+                fallbackPrinter.printFormattedTextAndCut(finalContent)
+            }
+
             // Berikan waktu 1 detik agar buffer Bluetooth terkirim sepenuhnya ke printer sebelum socket ditutup
             kotlinx.coroutines.delay(1000)
             Result.success(Unit)

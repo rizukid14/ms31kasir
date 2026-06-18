@@ -1,6 +1,7 @@
 package com.mekarsari.kasir.ui.navigation
 
 sealed class Screen(val route: String) {
+    object Splash : Screen("splash")
     object Kasir : Screen("kasir")
     object Produk : Screen("produk")
     object ProdukForm : Screen("produk_form?productId={productId}") {

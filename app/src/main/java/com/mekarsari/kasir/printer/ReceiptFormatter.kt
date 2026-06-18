@@ -179,7 +179,46 @@ class ReceiptFormatter {
         return sb.toString()
     }
 
+    fun formatDailyClosing(
+        shopName: String,
+        shopAddress: String,
+        shopAddress2: String = "",
+        dateStr: String,
+        revenue: Long,
+        transactionCount: Int,
+        averageTicket: Long,
+        topProducts: List<com.mekarsari.kasir.ui.laporan.TopProductReport>,
+        namaKasir: String
+    ): String {
+        val sb = StringBuilder()
+        sb.append("[C]<b>LAPORAN PENUTUPAN</b>\n")
+        sb.append("[C]<b>$shopName</b>\n")
+        if (shopAddress.isNotEmpty()) {
+            sb.append("[C]$shopAddress\n")
+        }
+        if (shopAddress2.isNotEmpty()) {
+            sb.append("[C]$shopAddress2\n")
+        }
+        sb.append("[C]--------------------------------\n")
+        sb.append("[L]Tanggal[R]$dateStr\n")
+        sb.append("[L]Kasir[R]$namaKasir\n")
+        sb.append("[C]--------------------------------\n")
+        sb.append("[L]Total Omset[R]${formatRupiah(revenue)}\n")
+        sb.append("[L]Total Transaksi[R]$transactionCount\n")
+        sb.append("[L]Rata-rata/Struk[R]${formatRupiah(averageTicket)}\n")
+        sb.append("[C]--------------------------------\n")
+        sb.append("[C]<b>5 PRODUK TERLARIS</b>\n")
+        topProducts.take(5).forEach { prod ->
+            val qtyStr = if (prod.qty % 1.0 == 0.0) prod.qty.toInt().toString() else prod.qty.toString()
+            sb.append("[L]${prod.name}[R]$qtyStr ${prod.unit}\n")
+        }
+        sb.append("[C]--------------------------------\n")
+        sb.append("[C]Mekar Sari Kasir\n")
+        sb.append("\n\n\n\n")
+        return sb.toString()
+    }
+
     fun formatRupiah(value: Long): String {
-        return String.format(Locale("in", "ID"), "%,d", value).replace(',', '.')
+        return com.mekarsari.kasir.util.CurrencyUtil.formatRupiah(value)
     }
 }

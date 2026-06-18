@@ -31,3 +31,7 @@ build/
 *.log
 .DS_Store
 Thumbs.db
+
+# Local environment/tool files
+.commandcode/
+

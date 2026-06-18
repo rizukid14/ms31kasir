@@ -124,12 +124,12 @@ fun SettingsScreen(
             text = {
                 val dummyCartItems = listOf(
                     com.mekarsari.kasir.domain.model.CartItem(
-                        product = com.mekarsari.kasir.data.local.entity.Product(id = 1, nama = "Sate Kambing", harga = 25000L, stok = 50, kategori = "Makanan"),
+                        product = com.mekarsari.kasir.data.local.entity.Product(id = 1, nama = "Sate Kambing", harga = 25000L, kategori = "Makanan"),
                         quantity = 1,
                         customHarga = 25000L
                     ),
                     com.mekarsari.kasir.domain.model.CartItem(
-                        product = com.mekarsari.kasir.data.local.entity.Product(id = 2, nama = "Es Teh Manis", harga = 4000L, stok = 100, kategori = "Minuman"),
+                        product = com.mekarsari.kasir.data.local.entity.Product(id = 2, nama = "Es Teh Manis", harga = 4000L, kategori = "Minuman"),
                         quantity = 2,
                         customHarga = 4000L
                     )
@@ -184,8 +184,10 @@ fun SettingsScreen(
         )
     }
 
-    val logoBitmap = remember(logoUri) {
-        com.mekarsari.kasir.printer.BitmapHelper.loadBitmapFromUri(context, logoUri)
+    val logoBitmap by produceState<Bitmap?>(initialValue = null, key1 = logoUri) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            com.mekarsari.kasir.printer.BitmapHelper.loadBitmapFromUri(context, logoUri)
+        }
     }
 
     val logoLauncher = rememberLauncherForActivityResult(

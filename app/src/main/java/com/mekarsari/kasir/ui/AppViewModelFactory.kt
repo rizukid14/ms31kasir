@@ -31,7 +31,7 @@ class AppViewModelFactory(
                 RiwayatViewModel(transactionRepository, settingRepository) as T
             }
             modelClass.isAssignableFrom(LaporanViewModel::class.java) -> {
-                LaporanViewModel(transactionRepository, productRepository) as T
+                LaporanViewModel(transactionRepository, productRepository, settingRepository) as T
             }
             modelClass.isAssignableFrom(SettingsViewModel::class.java) -> {
                 SettingsViewModel(settingRepository, database) as T

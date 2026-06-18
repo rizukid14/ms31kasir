@@ -78,9 +78,9 @@ class ProdukViewModel(
         return productRepository.getProductById(id)
     }
 
-    fun saveProduct(id: Int, nama: String, harga: Long, stok: Int, kategori: String?) {
+    fun saveProduct(id: Int, nama: String, harga: Long, kategori: String?) {
         viewModelScope.launch {
-            val product = Product(id = id, nama = nama, harga = harga, stok = stok, kategori = kategori)
+            val product = Product(id = id, nama = nama, harga = harga, kategori = kategori)
             if (id == 0) {
                 productRepository.insertProduct(product)
             } else {

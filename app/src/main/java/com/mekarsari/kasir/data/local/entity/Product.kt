@@ -10,6 +10,5 @@ data class Product(
     @ColumnInfo(name = "id") val id: Int = 0,
     @ColumnInfo(name = "nama") val nama: String,
     @ColumnInfo(name = "harga") val harga: Long,
-    @ColumnInfo(name = "stok") val stok: Int,
     @ColumnInfo(name = "kategori") val kategori: String? = null
 )
