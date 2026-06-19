@@ -28,7 +28,6 @@ fun ProdukFormScreen(
     var nama by remember { mutableStateOf("") }
     var hargaString by remember { mutableStateOf("") }
     var kategori by remember { mutableStateOf("") }
-    var stokString by remember { mutableStateOf("0") }
 
     var isEditMode by remember { mutableStateOf(false) }
     
@@ -45,7 +44,6 @@ fun ProdukFormScreen(
                     nama = product.nama
                     hargaString = product.harga.toString()
                     kategori = product.kategori ?: ""
-                    stokString = product.stok.toString()
                 }
             }
         }
@@ -108,20 +106,11 @@ fun ProdukFormScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            OutlinedTextField(
-                value = stokString,
-                onValueChange = { stokString = it },
-                label = { Text("Stok Produk") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
-            )
-
             Spacer(modifier = Modifier.weight(1f))
 
             Button(
                 onClick = {
                     val harga = hargaString.toLongOrNull()
-                    val stok = stokString.toIntOrNull() ?: 0
                     if (nama.isBlank() || hargaString.isBlank() || harga == null || harga <= 0L) {
                         showErrors = true
                         Toast.makeText(context, "Mohon lengkapi data produk dengan benar", Toast.LENGTH_SHORT).show()
@@ -130,7 +119,6 @@ fun ProdukFormScreen(
                             id = productId ?: 0,
                             nama = nama,
                             harga = harga,
-                            stok = stok,
                             kategori = kategori.ifEmpty { null }
                         )
                         onNavigateBack()

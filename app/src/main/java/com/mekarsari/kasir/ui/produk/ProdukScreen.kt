@@ -349,11 +349,6 @@ fun ProductDetailRow(
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.SemiBold
                     )
-                    Text(
-                        text = "Stok: ${product.stok}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = if (product.stok > 0) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.error
-                    )
                     if (!product.kategori.isNullOrEmpty()) {
                         SuggestionChip(
                             onClick = {},

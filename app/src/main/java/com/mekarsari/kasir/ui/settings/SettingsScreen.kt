@@ -145,26 +145,38 @@ fun SettingsScreen(
                         .verticalScroll(rememberScrollState()),
                     contentAlignment = Alignment.Center
                 ) {
-                    com.mekarsari.kasir.ui.kasir.ReceiptPreview(
+                    val dummyTx = com.mekarsari.kasir.data.local.entity.Transaction(
+                        id = 0,
+                        total = dummyTotal,
+                        bayar = 50000L,
+                        kembalian = 50000L - dummyTotal,
+                        nomorMeja = "05",
+                        createdAt = System.currentTimeMillis()
+                    )
+                    val dummyTxItems = dummyCartItems.map { item ->
+                        com.mekarsari.kasir.data.local.entity.TransactionItem(
+                            transactionId = 0,
+                            productId = item.product.id,
+                            namaProdukSnapshot = item.product.nama,
+                            hargaSaatItu = item.customHarga,
+                            qty = item.quantity,
+                            subtotal = item.subtotal,
+                            porsiCustom = item.customPortion
+                        )
+                    }
+                    val dummyTxWithItems = com.mekarsari.kasir.data.local.dao.TransactionWithItems(dummyTx, dummyTxItems)
+                    val formatter = remember { com.mekarsari.kasir.printer.ReceiptFormatter() }
+                    val dummyReceiptText = formatter.format(
                         shopName = namaToko,
                         shopAddress = alamatToko,
                         shopAddress2 = alamatToko2,
+                        transactionWithItems = dummyTxWithItems,
                         customHeader = receiptHeader,
                         customFooter1 = receiptFooter1,
                         customFooter2 = receiptFooter2,
-                        cartItems = dummyCartItems,
-                        subtotal = dummySubtotal,
-                        taxPercentage = pajakPersen,
-                        taxAmount = dummyTaxAmount,
-                        total = dummyTotal,
-                        payAmount = 50000L,
-                        change = 50000L - dummyTotal,
-                        nomorMeja = "05",
                         spacingTop = receiptSpacingTop,
                         spacingBottom = receiptSpacingBottom,
-                        logoUri = logoUri,
                         showLogo = showLogo,
-                        logoWidthChar = if (logoWidthChar > 0) logoWidthChar else 12,
                         showReceiptCode = showReceiptCode,
                         showSeqNumber = showSeqNumber,
                         showUnitQty = showUnitQty,
@@ -173,6 +185,13 @@ fun SettingsScreen(
                         showTotalQty = showTotalQty,
                         showSignatureSection = showSignatureSection,
                         namaKasir = namaKasir
+                    )
+
+                    com.mekarsari.kasir.ui.kasir.ReceiptPreview(
+                        receiptText = dummyReceiptText,
+                        logoUri = logoUri,
+                        showLogo = showLogo,
+                        logoWidthChar = if (logoWidthChar > 0) logoWidthChar else 12
                     )
                 }
             },
@@ -463,9 +482,10 @@ fun SettingsScreen(
                             ),
                         contentAlignment = Alignment.Center
                     ) {
-                        if (logoBitmap != null) {
+                        val currentLogoBitmap = logoBitmap
+                        if (currentLogoBitmap != null) {
                             Image(
-                                bitmap = logoBitmap.asImageBitmap(),
+                                bitmap = currentLogoBitmap.asImageBitmap(),
                                 contentDescription = "Logo Toko",
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier

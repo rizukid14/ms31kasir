@@ -19,6 +19,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
@@ -291,7 +292,7 @@ fun PaymentBottomSheet(
                             ) {
                                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                     Text("Nomor Meja", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                                    val tables = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "SR", "SRL")
+                                    val tables = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "SR", "SRL", "BKS")
                                     val chunks = tables.chunked(7)
                                     chunks.forEach { chunk ->
                                         Row(

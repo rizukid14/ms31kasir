@@ -83,7 +83,7 @@ class BluetoothPrinterManager(private val context: Context) {
             return@withContext Result.failure(Exception("Bluetooth dinonaktifkan"))
         }
 
-        var connection: InsecureBluetoothConnection? = null
+        var connection: com.dantsu.escposprinter.connection.bluetooth.BluetoothConnection? = null
         var printer: EscPosPrinter? = null
         try {
             val device: BluetoothDevice = adapter.getRemoteDevice(macAddress)

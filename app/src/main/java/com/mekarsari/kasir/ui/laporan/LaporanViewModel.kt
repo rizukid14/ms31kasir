@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mekarsari.kasir.data.repository.ProductRepository
 import com.mekarsari.kasir.data.repository.TransactionRepository
+import com.mekarsari.kasir.data.repository.SettingRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.Calendar
